@@ -25,7 +25,7 @@ site_description: 'Documentation for Keras, the Python Deep Learning library.'
 
 # Math markdown. 
 markdown_extensions: [math]
-extra_javascript: ['//cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML','mathjaxhelper.js']
+extra_javascript: ['https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML','mathjaxhelper.js']
 
 nav:
 - Home: index.md
