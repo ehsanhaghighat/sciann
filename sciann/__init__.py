@@ -3,7 +3,7 @@ from __future__ import print_function
 from __future__ import division
 
 
-from . import conditions
+from . import constraints
 from . import engine
 from . import utils
 
@@ -11,7 +11,7 @@ from . import utils
 from .utils import math
 from .engine.functional import *
 from .engine.models import *
-from .conditions import *
+from .constraints import *
 
 # SciANN.
 __author__ = "Ehsan Haghighat"

@@ -1,4 +1,4 @@
-""" Condition class to constrain the training.
+""" Constraint class to condition on the training.
 """
 
 from __future__ import absolute_import
@@ -9,7 +9,7 @@ from __future__ import print_function
 from ..utils import *
 
 
-class Condition(object):
+class Constraint(object):
     """ Configures the condition to impose constraint.
 
     # Arguments
@@ -41,7 +41,7 @@ class Condition(object):
                 "Expected a 1d numpy array for \"ids\". "
         
         if sol is not None: 
-            sol = to_list(sol)
+            sol = [y.reshape(-1, 1) if len(y.shape)==1 else y for y in to_list(sol)]
             assert all([isinstance(x, np.ndarray) for x in sol]), \
                 "Expected a list of numpy array for \"sol\". "
         

@@ -1,5 +1,6 @@
 site_name: SciANN Documentation
 
+# theme: cinder
 theme: readthedocs
   # name: null
   # custom_dir: theme
@@ -22,10 +23,17 @@ repo_url: http://github.com/sciann/sciann
 site_url: http://sciann.com/
 site_description: 'Documentation for Keras, the Python Deep Learning library.'
 
+# Math markdown. 
+markdown_extensions: [math]
+extra_javascript: ['https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML','mathjaxhelper.js']
+
 nav:
 - Home: index.md
 - Why use SciANN: why-use-sciann.md
 - Getting started:
   - Guide to SciANN model: getting-started/scimodel-guide.md
   - Guide to Functional: getting-started/functional-guide.md
-
+- Functionals: functionals.md
+- SciModels: scimodels.md
+- Variables: variables.md
+- Constraints: constraints.md

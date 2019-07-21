@@ -1,4 +1,4 @@
-""" Tie constraint to tie different outputs of the network.
+""" Neumann class to impose data Neumann constraint.
 """
 
 from __future__ import absolute_import
@@ -6,50 +6,42 @@ from __future__ import division
 from __future__ import print_function
 
 from ..utils import *
-from ..engine.condition import Condition
+from ..engine.constraint import Constraint
 
 
-class Tie(Condition):
-    """ Tie class to constrain network outputs.
-        constraint: `cond1 - cond2 == sol`.
+class Neumann(Constraint):
+    """ Dirichlet class to impose to the system.
 
     # Arguments
-        cond1 (Functional): A `Functional` object to be tied to cond2.
-        cond2 (Functional): A 'Functional' object to be tied to cond1.
+        cond (Functional): The `Functional` object that Neumann condition
+            will be imposed on.
         sol (np.ndarray): Expected output to set the `pde` to.
             If not provided, will be set to `zero`.
         mesh_ids (np.ndarray): A 1D numpy arrays consists of node-ids to impose the condition.
+        var (String): A layer name to differentiate `cond` with respect to.
         name (String): A `str` for name of the pde.
 
     # Returns
 
     # Raises
-        ValueError: 'pde' should be a functional object.
+        ValueError: 'cond' should be a functional object.
                     'mesh' should be a list of numpy arrays.
     """
-    def __init__(self, cond1, cond2, sol=None, mesh_ids=None, name="tie"):
-        # prepare cond.
-        if not is_functional(cond1):
+    def __init__(self, cond, sol=None, mesh_ids=None, var=None, name="neumann"):
+        if not is_functional(cond):
             raise ValueError(
-                "Expected a Functional object as the cond1, received a "
-                "{} - {}".format(type(cond1), cond1)
+                "Expected a Functional object as the `cond`, received a "
+                "{} - {}".format(type(cond), cond)
             )
-        if not is_functional(cond2):
-            raise ValueError(
-                "Expected a Functional object as the cond2, received a "
-                "{} - {}".format(type(cond2), cond2)
+        # Prepare check the variables to be differentiated w.r.t.
+        if isinstance(var, str):
+            cond = cond.diff(var)
+        else:
+            raise NotImplementedError(
+                'Currently, only differentiation with respect ' 
+                'to layers are supported. '
             )
-        # Form the constraint.
-        try:
-            cond = cond1-cond2
-        except (ValueError, TypeError):
-            print(
-                'Unexpected ValueError/TypeError - ',
-                'make sure `cond1` and `cond2` are functional objects. \n',
-                'cond1 - {} \n'.format(cond1),
-                'cond2 - {} \n'.format(cond2)
-            )
-        # prepare mesh.
+        # prepare the mesh.
         if mesh_ids is not None:
             if not all([isinstance(mesh_ids, np.ndarray), mesh_ids.ndim==1]):
                 raise ValueError(
@@ -71,7 +63,7 @@ class Tie(Condition):
                     "Provided {} \nExpected {} ".format(sol, cond.outputs)
                 )
 
-        super(Tie, self).__init__(
+        super(Neumann, self).__init__(
             cond=cond,
             ids=mesh_ids,
             sol=sol,

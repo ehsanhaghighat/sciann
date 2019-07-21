@@ -1,4 +1,4 @@
-""" Neumann class to impose data Neumann constraint.
+""" PDE class to impose pde constraint.
 """
 
 from __future__ import absolute_import
@@ -6,42 +6,32 @@ from __future__ import division
 from __future__ import print_function
 
 from ..utils import *
-from ..engine.condition import Condition
+from ..engine.constraint import Constraint
 
 
-class Neumann(Condition):
-    """ Dirichlet class to impose to the system.
+class PDE(Constraint):
+    """ PDE class to impose to the system.
 
     # Arguments
-        cond (Functional): The `Functional` object that Neumann condition
-            will be imposed on.
+        pde (Functional): The `Functional` object that pde if formed on.
         sol (np.ndarray): Expected output to set the `pde` to.
             If not provided, will be set to `zero`.
         mesh_ids (np.ndarray): A 1D numpy arrays consists of node-ids to impose the condition.
-        var (String): A layer name to differentiate `cond` with respect to.
         name (String): A `str` for name of the pde.
 
     # Returns
 
     # Raises
-        ValueError: 'cond' should be a functional object.
+        ValueError: 'pde' should be a functional object.
                     'mesh' should be a list of numpy arrays.
     """
-    def __init__(self, cond, sol=None, mesh_ids=None, var=None, name="neumann"):
-        if not is_functional(cond):
+    def __init__(self, pde, sol=None, mesh_ids=None, name="pde"):
+        if not is_functional(pde):
             raise ValueError(
-                "Expected a Functional object as the `cond`, received a "
-                "{} - {}".format(type(cond), cond)
+                "Expected a Functional object as the pde, received a "
+                "{} - {}".format(type(pde), pde)
             )
-        # Prepare check the variables to be differentiated w.r.t.
-        if isinstance(var, str):
-            cond = cond.diff(var)
-        else:
-            raise NotImplementedError(
-                'Currently, only differentiation with respect ' 
-                'to layers are supported. '
-            )
-        # prepare the mesh.
+        # prepare mesh.
         if mesh_ids is not None:
             if not all([isinstance(mesh_ids, np.ndarray), mesh_ids.ndim==1]):
                 raise ValueError(
@@ -56,15 +46,15 @@ class Neumann(Condition):
                     "Expected a list of numpy arrays for `sol`, received a "
                     "{} - {}".format(type(sol), sol)
                 )
-            if len(sol) != len(cond.outputs):
+            if len(sol) != len(pde.outputs):
                 raise ValueError(
                     "Number of expected outputs in `sol` does not match "
                     "number of outputs from the constraint. \n "
-                    "Provided {} \nExpected {} ".format(sol, cond.outputs)
+                    "Provided {} \nExpected {} ".format(sol, pde.outputs)
                 )
 
-        super(Neumann, self).__init__(
-            cond=cond,
+        super(PDE, self).__init__(
+            cond=pde,
             ids=mesh_ids,
             sol=sol,
             name=name

@@ -1,4 +1,4 @@
-""" PDE class to impose pde constraint.
+""" Dirichlet class to impose dirichlet constraint.
 """
 
 from __future__ import absolute_import
@@ -6,14 +6,15 @@ from __future__ import division
 from __future__ import print_function
 
 from ..utils import *
-from ..engine.condition import Condition
+from ..engine.constraint import Constraint
 
 
-class PDE(Condition):
-    """ PDE class to impose to the system.
+class Dirichlet(Constraint):
+    """ Dirichlet class to impose to the system.
 
     # Arguments
-        pde (Functional): The `Functional` object that pde if formed on.
+        cond (Functional): The `Functional` object that Dirichlet condition
+            will be imposed on.
         sol (np.ndarray): Expected output to set the `pde` to.
             If not provided, will be set to `zero`.
         mesh_ids (np.ndarray): A 1D numpy arrays consists of node-ids to impose the condition.
@@ -22,14 +23,14 @@ class PDE(Condition):
     # Returns
 
     # Raises
-        ValueError: 'pde' should be a functional object.
+        ValueError: 'cond' should be a functional object.
                     'mesh' should be a list of numpy arrays.
     """
-    def __init__(self, pde, sol=None, mesh_ids=None, name="pde"):
-        if not is_functional(pde):
+    def __init__(self, cond, sol=None, mesh_ids=None, name="dirichlet"):
+        if not is_functional(cond):
             raise ValueError(
-                "Expected a Functional object as the pde, received a "
-                "{} - {}".format(type(pde), pde)
+                "Expected a Functional object as the `cond`, received a "
+                "{} - {}".format(type(cond), cond)
             )
         # prepare mesh.
         if mesh_ids is not None:
@@ -46,15 +47,15 @@ class PDE(Condition):
                     "Expected a list of numpy arrays for `sol`, received a "
                     "{} - {}".format(type(sol), sol)
                 )
-            if len(sol) != len(pde.outputs):
+            if len(sol) != len(cond.outputs):
                 raise ValueError(
                     "Number of expected outputs in `sol` does not match "
                     "number of outputs from the constraint. \n "
-                    "Provided {} \nExpected {} ".format(sol, pde.outputs)
+                    "Provided {} \nExpected {} ".format(sol, cond.outputs)
                 )
 
-        super(PDE, self).__init__(
-            cond=pde,
+        super(Dirichlet, self).__init__(
+            cond=cond,
             ids=mesh_ids,
             sol=sol,
             name=name

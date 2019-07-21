@@ -1,4 +1,4 @@
-""" Dirichlet class to impose dirichlet constraint.
+""" Tie constraint to tie different outputs of the network.
 """
 
 from __future__ import absolute_import
@@ -6,15 +6,16 @@ from __future__ import division
 from __future__ import print_function
 
 from ..utils import *
-from ..engine.condition import Condition
+from ..engine.constraint import Constraint
 
 
-class Dirichlet(Condition):
-    """ Dirichlet class to impose to the system.
+class Tie(Constraint):
+    """ Tie class to constrain network outputs.
+        constraint: `cond1 - cond2 == sol`.
 
     # Arguments
-        cond (Functional): The `Functional` object that Dirichlet condition
-            will be imposed on.
+        cond1 (Functional): A `Functional` object to be tied to cond2.
+        cond2 (Functional): A 'Functional' object to be tied to cond1.
         sol (np.ndarray): Expected output to set the `pde` to.
             If not provided, will be set to `zero`.
         mesh_ids (np.ndarray): A 1D numpy arrays consists of node-ids to impose the condition.
@@ -23,14 +24,30 @@ class Dirichlet(Condition):
     # Returns
 
     # Raises
-        ValueError: 'cond' should be a functional object.
+        ValueError: 'pde' should be a functional object.
                     'mesh' should be a list of numpy arrays.
     """
-    def __init__(self, cond, sol=None, mesh_ids=None, name="dirichlet"):
-        if not is_functional(cond):
+    def __init__(self, cond1, cond2, sol=None, mesh_ids=None, name="tie"):
+        # prepare cond.
+        if not is_functional(cond1):
             raise ValueError(
-                "Expected a Functional object as the `cond`, received a "
-                "{} - {}".format(type(cond), cond)
+                "Expected a Functional object as the cond1, received a "
+                "{} - {}".format(type(cond1), cond1)
+            )
+        if not is_functional(cond2):
+            raise ValueError(
+                "Expected a Functional object as the cond2, received a "
+                "{} - {}".format(type(cond2), cond2)
+            )
+        # Form the constraint.
+        try:
+            cond = cond1-cond2
+        except (ValueError, TypeError):
+            print(
+                'Unexpected ValueError/TypeError - ',
+                'make sure `cond1` and `cond2` are functional objects. \n',
+                'cond1 - {} \n'.format(cond1),
+                'cond2 - {} \n'.format(cond2)
             )
         # prepare mesh.
         if mesh_ids is not None:
@@ -54,7 +71,7 @@ class Dirichlet(Condition):
                     "Provided {} \nExpected {} ".format(sol, cond.outputs)
                 )
 
-        super(Dirichlet, self).__init__(
+        super(Tie, self).__init__(
             cond=cond,
             ids=mesh_ids,
             sol=sol,

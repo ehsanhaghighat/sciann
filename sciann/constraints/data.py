@@ -6,10 +6,10 @@ from __future__ import division
 from __future__ import print_function
 
 from ..utils import *
-from ..engine.condition import Condition
+from ..engine.constraint import Constraint
 
 
-class Data(Condition):
+class Data(Constraint):
     """ Data class to impose to the system.
 
     # Arguments

@@ -11,7 +11,7 @@ from keras.models import Model
 from keras.utils import plot_model
 
 from .functional import Variable, RadialBasisVariable
-from .condition import Condition
+from .constraint import Constraint
 
 
 class SciModel(object):
@@ -20,19 +20,19 @@ class SciModel(object):
     # Arguments
         inputs: Main variables of the network, also known as `xs`,
             should be of type `Variable`.
-        conditions: list all conditions to be imposed on the training;
-            should be of type `Condition`.
+        constraints: list all conditions to be imposed on the training;
+            should be of type `Constraint`.
         plot_to_file: A string fine name to output the network architecture.
 
     # Returns
 
     # Raises
         ValueError: `inputs` must be of type Variable.
-                    `conditions` must be of type Functional.
+                    `constraints` must be of type Functional.
     """
     def __init__(self,
                  inputs=None,
-                 conditions=None,
+                 constraints=None,
                  loss_func="mse",
                  plot_to_file=None,
                  **kwargs):
@@ -47,12 +47,12 @@ class SciModel(object):
         for var in inputs:
             input_vars += var.inputs
         # check outputs if of correct type.
-        conditions = to_list(conditions)
-        if not all([isinstance(y, Condition) for y in conditions]):
-            raise ValueError('Please provide a "list" of "Condition"s.')
+        constraints = to_list(constraints)
+        if not all([isinstance(y, Constraint) for y in constraints]):
+            raise ValueError('Please provide a "list" of "Constraint"s.')
         # prepare network outputs.
         output_vars = []
-        for cond in conditions:
+        for cond in constraints:
             output_vars += cond().outputs
         # prepare loss_functions.
         if isinstance(loss_func, str) and loss_func in ["mse", "mae"]:
@@ -81,7 +81,7 @@ class SciModel(object):
         # Set the variables.
         self._model = model
         self._inputs = inputs
-        self._conditions = conditions
+        self._constraints = constraints
         self._loss_func = loss_func
 
         # Plot to file if requested.
@@ -93,8 +93,8 @@ class SciModel(object):
         return self._model
 
     @property
-    def conditions(self):
-        return self._conditions
+    def constraints(self):
+        return self._constraints
 
     @property
     def inputs(self):
@@ -144,12 +144,13 @@ class SciModel(object):
             ]
 
         # prepare X,Y data.
+        x_true = [x.reshape(-1, 1) if len(x.shape)==1 else x for x in to_list(x_true)]
         num_sample = x_true[0].shape[0]
         assert all([x.shape[0]==num_sample for x in x_true[1:]])
         ids_all = np.arange(0, num_sample)
 
         y_true, sample_weights = [], []
-        for c in self._conditions:
+        for c in self._constraints:
             # prepare sample weight.
             if c.ids is None:
                 ids = ids_all
@@ -164,8 +165,6 @@ class SciModel(object):
             if c.sol is not None:
                 for yi, soli in zip(sol, c.sol):
                     yi[ids, :] = soli
-            print(wei)
-            print(sol)
             # add to the list.
             y_true += sol
             sample_weights += wei
