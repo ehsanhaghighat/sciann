@@ -25,7 +25,7 @@ setup(
     install_requires=['keras>=2.2.4',
                       'tensorflow>=1.14.0'],
     classifiers=[
-          'Development Status :: 1 - Beta',
+          'Development Status :: 4 - Beta',
           'Intended Audience :: Developers',
           'Intended Audience :: Education',
           'Intended Audience :: Science/Research',
