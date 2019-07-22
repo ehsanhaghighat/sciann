@@ -40,3 +40,4 @@ y_pred = model.predict(x_true)
 As you may find, this code takes advantage of [`Keras`](http://keras.io) great design and takes it to the next level for scientific computations. 
 
 
+w

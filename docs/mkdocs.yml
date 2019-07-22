@@ -33,7 +33,9 @@ nav:
 - Getting started:
   - Guide to SciANN model: getting-started/scimodel-guide.md
   - Guide to Functional: getting-started/functional-guide.md
-- Functionals: functionals.md
 - SciModels: scimodels.md
+- Functionals: functionals.md
 - Variables: variables.md
+- Fields: fields.md
 - Constraints: constraints.md
+- Utils: utils.md

@@ -5,6 +5,9 @@ SciANN.egg-info/SOURCES.txt
 SciANN.egg-info/dependency_links.txt
 SciANN.egg-info/requires.txt
 SciANN.egg-info/top_level.txt
+docs/__init__.py
+docs/autogen.py
+docs/structure.py
 sciann/__init__.py
 sciann/constraints/__init__.py
 sciann/constraints/data.py

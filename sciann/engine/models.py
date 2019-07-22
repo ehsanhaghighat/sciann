@@ -112,6 +112,7 @@ class SciModel(object):
 
     def solve(self,
               x_true,
+              weights=None,
               epochs=10,
               batch_size=2**8,
               shuffle=True,
@@ -149,17 +150,28 @@ class SciModel(object):
         assert all([x.shape[0]==num_sample for x in x_true[1:]])
         ids_all = np.arange(0, num_sample)
 
+        if weights is None:
+            weights = np.ones(num_sample)
+        else:
+            if len(weights.shape)!=1 or \
+                weights.shape[0] != num_sample:
+                raise ValueError(
+                    'Input error: `weights` should have dimension 1 with '
+                    'the same sample length as `Xs. '
+                )
+                
         y_true, sample_weights = [], []
         for c in self._constraints:
             # prepare sample weight.
             if c.ids is None:
                 ids = ids_all
-                wei = [np.ones(num_sample) for yi in c.cond.outputs]
+                wei = [weights for yi in c.cond.outputs]
             else:
                 ids = c.ids
                 wei = [np.zeros(num_sample)+default_zero_weight for yi in c.cond.outputs]
                 for w in wei:
-                    w[ids] = float(num_sample)/float(c.ids.size)
+                    w[ids] = weights[ids]
+                    w[ids] *= sum(weights)/sum(w[ids])
             # prepare y_true.
             sol = [np.zeros(((num_sample,) + k.backend.int_shape(yi)[1:])) for yi in c.cond.outputs]
             if c.sol is not None:
