@@ -77,19 +77,19 @@ def post_process_signature(signature):
     parts = re.split(r'\.(?!\d)', signature)
     if len(parts) >= 4:
         if parts[1] == 'layers':
-            signature = 'keras.layers.' + '.'.join(parts[3:])
+            signature = 'sciann.layers.' + '.'.join(parts[3:])
         if parts[1] == 'utils':
-            signature = 'keras.utils.' + '.'.join(parts[3:])
+            signature = 'sciann.utils.' + '.'.join(parts[3:])
         if parts[1] == 'backend':
-            signature = 'keras.backend.' + '.'.join(parts[3:])
+            signature = 'sciann.backend.' + '.'.join(parts[3:])
     return signature
 
 
 def clean_module_name(name):
-    if name.startswith('keras_applications'):
-        name = name.replace('keras_applications', 'keras.applications')
-    if name.startswith('keras_preprocessing'):
-        name = name.replace('keras_preprocessing', 'keras.preprocessing')
+    if name.startswith('sciann_applications'):
+        name = name.replace('sciann_applications', 'sciann.applications')
+    if name.startswith('sciann_preprocessing'):
+        name = name.replace('sciann_preprocessing', 'sciann.preprocessing')
     return name
 
 
@@ -98,8 +98,8 @@ def class_to_source_link(cls):
     path = module_name.replace('.', '/')
     path += '.py'
     line = inspect.getsourcelines(cls)[-1]
-    link = ('https://github.com/keras-team/'
-            'keras/blob/master/' + path + '#L' + str(line))
+    link = ('https://github.com/sciann/'
+            'sciann/tree/master/' + path + '#L' + str(line))
     return '[[source]](' + link + ')'
 
 

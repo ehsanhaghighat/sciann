@@ -1,4 +1,4 @@
-Metadata-Version: 1.1
+Metadata-Version: 2.1
 Name: SciANN
 Version: 0.1.1
 Summary: A deep learning library for scientific computations, solving ODEs and PDEs.
@@ -29,3 +29,5 @@ Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.6
 Classifier: Topic :: Software Development :: Libraries
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Provides-Extra: tests
+Provides-Extra: visualize
