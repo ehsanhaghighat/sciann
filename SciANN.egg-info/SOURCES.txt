@@ -1,6 +1,5 @@
 README.md
 setup.py
-setup_local.py
 SciANN.egg-info/PKG-INFO
 SciANN.egg-info/SOURCES.txt
 SciANN.egg-info/dependency_links.txt

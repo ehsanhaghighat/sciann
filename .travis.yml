@@ -1,7 +1,16 @@
 # This code is taken from Keras .travis file. 
 dist: trusty
 language: python
-
+matrix:
+    include:
+        - python: 3.6
+          env: KERAS_BACKEND=tensorflow TEST_MODE=API
+        - python: 3.6
+          env: KERAS_BACKEND=tensorflow TEST_MODE=PEP8_DOC PIL=Pillow
+        - python: 2.7
+          env: KERAS_BACKEND=tensorflow
+        - python: 3.6
+          env: KERAS_BACKEND=tensorflow
 install:
   # code below is taken from http://conda.pydata.org/docs/travis.html
   # We do this conditionally because it saves us some downloading if the
@@ -53,7 +62,7 @@ script:
   # create dataset directory to avoid concurrent directory creation at runtime
   - mkdir ~/.sciann/datasets
   # set up sciann backend
-  - sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$SCIANN_BACKEND'/g' ~/.sciann/sciann.json;
+  - sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.sciann/sciann.json;
   - echo -e "Running tests with the following config:\n$(cat ~/.sciann/sciann.json)"
   - if [[ "$TEST_MODE" == "INTEGRATION_TESTS" ]]; then
       PYTHONPATH=$PWD:$PYTHONPATH py.test tests/integration_tests;
