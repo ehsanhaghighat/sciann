@@ -65,5 +65,5 @@ script:
   # - sed -i -e 's/"backend":[[:space:]]*"[^"]*/"backend":\ "'$KERAS_BACKEND'/g' ~/.sciann/sciann.json;
   # - echo -e "Running tests with the following config:\n$(cat ~/.sciann/sciann.json)"
   - if [[ "$TEST_MODE" == "API" ]]; then
-      PYTHONPATH=$PWD:$PYTHONPATH pip install git+git://www.github.com/sicann/sciann.git && python update_api.py && pip install -e .[tests] --progress-bar off && py.test tests/test_api.py;
+      PYTHONPATH=$PWD:$PYTHONPATH pip install git+git://github.com/sciann/sciann.git && python update_api.py && pip install -e .[tests] --progress-bar off && py.test tests/test_api.py;
     fi

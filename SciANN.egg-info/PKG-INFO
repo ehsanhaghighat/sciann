@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SciANN
-Version: 0.1.1
+Version: 0.1.2
 Summary: A deep learning library for scientific computations, solving ODEs and PDEs.
 Home-page: https://github.com/sciann/sciann
 Author: Ehsan Haghighat
