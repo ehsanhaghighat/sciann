@@ -15,7 +15,7 @@ and is distributed under the MIT license.
 
 setup(
     name='SciANN',
-    version='0.1.1',
+    version='0.1.2',
     description='A deep learning library for scientific computations, solving ODEs and PDEs.',
     long_description=long_description,
     author='Ehsan Haghighat',
