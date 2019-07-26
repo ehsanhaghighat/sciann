@@ -24,7 +24,7 @@ site_url: https://sciann.com/
 site_description: 'Documentation for Keras, the Python Deep Learning library.'
 
 # Math markdown. 
-markdown_extensions: [math]
+markdown_extensions: [extra, tables, fenced_code]
 extra_javascript: ['https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS_HTML','mathjaxhelper.js']
 
 nav:

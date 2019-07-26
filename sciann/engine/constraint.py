@@ -59,3 +59,12 @@ class Constraint(object):
 
     def eval(self, xs):
         return self.cond.eval(xs)
+
+    def update_target(self, val):
+        for old, new in zip(self.sol, to_list(val)):
+            if old.shape == new.shape:
+                old = new
+            else:
+                raise ValueError(
+                    'Expected an array of identication shape for the update. '
+                )

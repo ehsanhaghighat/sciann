@@ -100,6 +100,15 @@ class SciModel(object):
     def inputs(self):
         return self._inputs
 
+    def verify_update_constraints(self, constraints):
+        ver = []
+        for old, new in zip(self._constraints, constraints):
+            if old==new and old.sol==new.sol:
+                ver.append(True)
+            else:
+                ver.append(False)
+        return all(ver)
+
     def __call__(self, *args, **kwargs):
         output = self._model.__call__(*args, **kwargs)
         return output if isinstance(output, list) else [output]
