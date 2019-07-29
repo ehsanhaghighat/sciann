@@ -1,7 +1,7 @@
 Metadata-Version: 2.1
 Name: SciANN
-Version: 0.1.2
-Summary: A deep learning library for scientific computations, solving ODEs and PDEs.
+Version: 0.1.4
+Summary: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks.
 Home-page: https://github.com/sciann/sciann
 Author: Ehsan Haghighat
 Author-email: ehsan@sciann.com

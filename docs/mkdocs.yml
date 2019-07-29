@@ -19,9 +19,10 @@ theme: readthedocs
 
 
 docs_dir: sources
+site_dir: ../../SciANN_site
 repo_url: https://github.com/sciann/sciann
 site_url: https://sciann.com/
-site_description: 'Documentation for Keras, the Python Deep Learning library.'
+site_description: 'Documentation for SciANN, the Python Deep Learning library.'
 
 # Math markdown. 
 markdown_extensions: [extra, tables, fenced_code]

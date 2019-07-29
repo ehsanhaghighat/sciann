@@ -25,8 +25,8 @@ if sys.version[0] == '2':
     reload(sys)
     sys.setdefaultencoding('utf8')
 
+docs_dir = pathlib.Path(__file__).resolve().parents[0]
 sciann_dir = pathlib.Path(__file__).resolve().parents[1]
-
 
 def get_function_signature(function, method=True):
     wrapped = getattr(function, '_original_function', None)

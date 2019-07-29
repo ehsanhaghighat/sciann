@@ -15,8 +15,8 @@ and is distributed under the MIT license.
 
 setup(
     name='SciANN',
-    version='0.1.2',
-    description='A deep learning library for scientific computations, solving ODEs and PDEs.',
+    version='0.1.4',
+    description='A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks.',
     long_description=long_description,
     author='Ehsan Haghighat',
     author_email='ehsan@sciann.com',
@@ -39,6 +39,7 @@ setup(
                     'pandas',
                     'requests',
                     'graphviz',
+                    'pydot',
                     'markdown',
                     'matplotlib',
                     'pyux',

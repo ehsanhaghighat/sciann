@@ -47,6 +47,17 @@ class SciModel(object):
         for var in inputs:
             input_vars += var.inputs
         # check outputs if of correct type.
+        if constraints is None:
+            if 'conditions' in kwargs:
+                constraints = kwargs.get('conditions')
+            elif 'targets' in kwargs:
+                constraints = kwargs.get('targets')
+        else:
+            if 'conditions' in kwargs or 'targets' in kwargs:
+                raise TypeError(
+                    '`constraints`, `conditions`, and `targets` are all equivalent keywords '
+                    '- only one should be passed to `SciModel`. '
+                )
         constraints = to_list(constraints)
         if not all([isinstance(y, Constraint) for y in constraints]):
             raise ValueError('Please provide a "list" of "Constraint"s.')
@@ -104,7 +115,13 @@ class SciModel(object):
         ver = []
         for old, new in zip(self._constraints, constraints):
             if old==new and old.sol==new.sol:
-                ver.append(True)
+                if old.sol is None:
+                    ver.append(True)
+                else:
+                    if all([all(xo==xn) for xo, xn in zip(old.sol, new.sol)]):
+                        ver.append(True)
+                    else:
+                        ver.append(False)
             else:
                 ver.append(False)
         return all(ver)

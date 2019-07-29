@@ -20,18 +20,23 @@ __copyright__ = "Copyright 2019, Physics-Informed Deep Learning"
 __credits__ = []
 __url__ = "http://github.com/sciann/sciann]"
 __license__ = "MIT"
-__version__ = "0.1.2"
-__cite__ = "SciANN: A deep learning approach to Scientific computations"
+__version__ = "0.1.4"
+__cite__ = \
+    '@misc{haghighat2019sciann, \n' +\
+    '    title={SciANN: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks}, \n' +\
+    '    author={Haghighat, Ehsan and Juanes, Ruben}, \n' +\
+    '    url={https://github.com/sciann/sciann.git}, \n' +\
+    '    year={2019} \n' +\
+    '}'
+
 
 # Import message.
-__welcome__ = '\n' + \
-    '--------------------- {} {} ---------------------\n'.format(str.upper(__name__), str(__version__)) + \
-    'Thanks for using {}! \n'.format(str.upper(__name__)) + \
-    'Please review the paper bellow carefully to use this package correctly: \n' + \
-    '      {}\n\n'.format(__cite__) + \
-    'Please share your comments with us at: {}\n'.format(__email__) + \
-    'Enjoy {}! \n'.format(str.upper(__name__)) + \
-    '-- {}'.format(__author__) + \
-    '\n'
+_header = '--------------------- {} {} ---------------------'.format(str.upper(__name__), str(__version__))
+_footer = len(_header)*'-'
+__welcome__ = \
+    '{} \n'.format(_header) +\
+    'Please review the documentation at `https://sciann.com`. \n' +\
+    '{} \n'.format(__cite__) +\
+    _footer
 
 print(__welcome__)

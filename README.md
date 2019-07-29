@@ -1,8 +1,8 @@
-# SciANN: Deep Learning for Scientific Computations 
+# SciANN: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks 
 
 ## You have just found SciANN.
 
-SciANN is a high-level artificial neural networks API, written in Python and capable of running on top of [Keras](https://github.com/keras-team/keras) and [TensorFlow](https://github.com/tensorflow/tensorflow). It was developed with a focus on enabling fast experimentation with different networks and emphasis on scientific computations, physics informed deep learing, and inversion. *Being able to go from idea to result with the least possible delay is key to doing good research.*
+SciANN is a high-level artificial neural networks API, written in Python using [Keras](https://keras.io) and [TensorFlow](https://www.tensorflow.org) backends. It is developed with a focus on enabling fast experimentation with different networks architectures and with emphasis on scientific computations, physics informed deep learing, and inversion. *Being able to start deep-learning in a very few lines of code is key to doing good research.*
 
 Use SciANN if you need a deep learning library that:
 
@@ -12,6 +12,15 @@ Use SciANN if you need a deep learning library that:
 
 Read the documentation at [SicANN.com](https://sciann.com).
 
+Cite SciANN for your work at:
+ 
+    @misc{haghighat2019sciann, 
+        title={SciANN: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks}, 
+        author={Haghighat, Ehsan and Juanes, Ruben}, 
+        url={https://github.com/sciann/sciann.git}, 
+        year={2019} 
+    }
+
 Sciann is compatible with: __Python 2.7-3.6__.
 
 
@@ -20,37 +29,42 @@ Sciann is compatible with: __Python 2.7-3.6__.
 
 ## Getting started: 30 seconds to SciANN
 
-The core data structure of SciANN is a __model__, a way to organize SciANN functionals and Keras layers. The simplest type of model is a [`SciModel`] with sub-[`Functionals`].
+The core data structure of SciANN is a `Functional`, a way to organize inputs (`Variables`) and outputs (`Fields`) of a network. 
 
-Here is the `SciANN` model:
+Targets are imposed on `Functional` instances using `Constraint`s. 
+
+The SciANN model (`SciModel`) is formed from inputs (`Variables`) and targets(`Constraints`). The model is then trained by calling the `solve` function.  
+
+Here is the simplest `SciANN` model:
 
 ```python
 from sciann import Variable, Functional, SciModel
+from sciann.constraints import Data
 
 x = Variable('x')
 y = Functional('y')
-model = SciModel(x, y)
+ 
+# y_true is a Numpy array of (N,1) -- with N as number of samples.  
+model = SciModel(x, Data(y, y_true))
 ```
 
-Plotting a model as easy as passing a file_name to the SciModel:
+This is associated to the simplest neural network possible, i.e. a linear relation between the input variable `x` and the output variable `y` with only two parameters to be learned.
+ 
+Plotting a network is as easy as passing a file_name to the SciModel:
 
 ```python
-model = SciModel(x, y, plot_to_file='file_path')
+model = SciModel(x, Data(y, y_true), plot_to_file='file_path')
 ```
 Once your model looks good, perform the learning with `.solve()`:
 
 ```python
+# x_true is a Numpy array of (N,1) -- with N as number of samples. 
 model.solve(x_true, epochs=5, batch_size=32)
 ```
 
-You can now iterate on your training data in batches:
+You can iterate on your training data in batches and in multiple epochs. Please check [Keras](https://keras.io) documentation on `model.fit` for more information on possible options. 
 
-```python
-# x_train and y_train are Numpy arrays --just like in the Scikit-Learn API.
-model.fit(x_train, y_train, epochs=5, batch_size=32)
-```
-
-You can evaluate model on new data:
+You can evaluate the model any time on new data:
 
 ```python
 classes = model.predict(x_test, batch_size=128)
@@ -100,12 +114,15 @@ First, clone SciANN using `git`:
 git clone https://github.com/sciann/sciann.git
 ```
 
- Then, `cd` to the SciANN folder and run the install command:
+Then, `cd` to the SciANN folder and run the install command:
 ```sh
-cd sciann
 sudo python setup.py install
 ```
 
+or
+```sh
+sudo pip install .
+```
 ------------------
 
 
