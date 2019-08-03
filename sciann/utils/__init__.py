@@ -4,8 +4,9 @@ from __future__ import division
 from __future__ import print_function
 
 
-from . import process_data_for_radial_basis
 from . import math
+from . import utilities
+from . import validations
 
 from .utilities import *
 from .validations import *

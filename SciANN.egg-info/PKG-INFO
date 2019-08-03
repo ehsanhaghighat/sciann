@@ -29,5 +29,5 @@ Classifier: Programming Language :: Python :: 3
 Classifier: Programming Language :: Python :: 3.6
 Classifier: Topic :: Software Development :: Libraries
 Classifier: Topic :: Software Development :: Libraries :: Python Modules
-Provides-Extra: visualize
 Provides-Extra: tests
+Provides-Extra: visualize
