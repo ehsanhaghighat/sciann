@@ -59,7 +59,7 @@ class Functional(object):
             dtype = K.floatx()
         elif not K.floatx() == dtype:
             K.set_floatx(dtype)
-        # check for copy constructor. 
+        # check for copy constructor.
         if all([x in kwargs for x in ('inputs', 'outputs', 'layers')]):
             self._inputs = kwargs['inputs']
             self._outputs = kwargs['outputs']
@@ -172,7 +172,7 @@ class Functional(object):
         self._layers = layers
 
     def eval(self, model, mesh):
-        assert is_pdemodel(model), \
+        assert is_scimodel(model), \
             'Expected a SciModel object. '
         return unpack_singleton(
             K.function(model.model.inputs, self._outputs)(mesh)
@@ -217,24 +217,24 @@ class Functional(object):
 
     def append_to_outputs(self, outputs):
         self.outputs = self.outputs + outputs
-        
+
     def split(self):
-        """ In the case of `Functional` with multiple outputs, 
-            you can split the outputs and get an associated functional. 
-            
+        """ In the case of `Functional` with multiple outputs,
+            you can split the outputs and get an associated functional.
+
         # Returns
-            (f1, f2, ...): Tuple of splitted `Functional` objects 
-                associated to cheach outputs. 
+            (f1, f2, ...): Tuple of splitted `Functional` objects
+                associated to cheach outputs.
         """
         if len(self._outputs)==1:
             return self
         fs = ()
-        # total number of outputs to get splitted. 
+        # total number of outputs to get splitted.
         nr = len(self._outputs)
-        # associated to each output, there is a layer to be splitted. 
+        # associated to each output, there is a layer to be splitted.
         lays = self.layers[:-nr]
         for out, lay in zip(self._outputs, self._layers[-nr:]):
-            # copy constructor for functional. 
+            # copy constructor for functional.
             f = Functional(
                 inputs = to_list(self.inputs),
                 outputs = to_list(out),

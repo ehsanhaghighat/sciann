@@ -5,10 +5,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from .utilities import *
+
 from keras.layers import Lambda
 from keras.layers import Input
 from keras.models import Model
+
+from ..utils import *
 
 
 def pow(f, a):
@@ -545,7 +547,7 @@ def diff(f, *args, **kwargs):
             
     res = f.copy()
     
-    lay, tens = sciann.lambda_gradient(
+    lay, tens = lambda_gradient(
         y, x, order, "{}_{}".format(y_name, x_name)
     )
     res.append_to_layers(to_list(lay))

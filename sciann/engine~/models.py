@@ -11,28 +11,37 @@ from keras.models import Model
 from keras.utils import plot_model
 
 from .functional import Variable, RadialBasisVariable
-from .constraint import Constraint
+from ..constraints.constraint import Constraint
 
 
 class SciModel(object):
     """Configures the model for training.
 
     # Arguments
-        inputs: Main variables of the network, also known as `xs`,
-            should be of type `Variable`.
-        constraints: list all conditions to be imposed on the training;
-            should be of type `Constraint`.
-        plot_to_file: A string fine name to output the network architecture.
+        inputs: Main variables (also called inputs, or independent variables) of the network, `xs`.
+            They all should be of type `Variable`.
 
-    # Returns
+        targets: list all targets (also called outputs, or dependent variables)
+            to be satisfied during the training. Expected list members are:
+            - Entries of type `Constraint`, such as Data, Tie, etc.
+            - Entries of type `Functional` can be:
+                . A single `Functional`: will be treated as a zero constraint.
+                    An example is a PDE that is supposed to be zero.
+                . A tuple of (`Functional`, data: np.ndarray): will be treated as a `Constraint` of type `Data`.
+                . A tuple of (`Functional`, `Functional`): will be treated as a `Constraint` of type `Tie`.
+            - If you need to impose more complex types of constraints or
+                to impose a constraint partially in a specific part of region,
+                use `Data` or `Tie` classes from `Constraint`.
+
+        plot_to_file: A string file name to output the network architecture.
 
     # Raises
         ValueError: `inputs` must be of type Variable.
-                    `constraints` must be of type Functional.
+                    `targets` must be of types `Functional`, or (`Functional`, data), or (`Functional`, `Functional`).
     """
     def __init__(self,
                  inputs=None,
-                 constraints=None,
+                 targets=None,
                  loss_func="mse",
                  plot_to_file=None,
                  **kwargs):
@@ -47,23 +56,23 @@ class SciModel(object):
         for var in inputs:
             input_vars += var.inputs
         # check outputs if of correct type.
-        if constraints is None:
-            if 'conditions' in kwargs:
-                constraints = kwargs.get('conditions')
-            elif 'targets' in kwargs:
-                constraints = kwargs.get('targets')
+        if targets is None:
+            if 'constraints' in kwargs:
+                targets = kwargs.get('constraints')
+            elif 'conditions' in kwargs:
+                targets = kwargs.get('conditions')
         else:
-            if 'conditions' in kwargs or 'targets' in kwargs:
+            if 'conditions' in kwargs or 'constraints' in kwargs:
                 raise TypeError(
-                    '`constraints`, `conditions`, and `targets` are all equivalent keywords '
-                    '- only one should be passed to `SciModel`. '
+                    'Inconsistent inputs: `constraints`, `conditions`, and `targets` are all equivalent keywords '
+                    '- pass all targets as a list to `SciModel`. '
                 )
-        constraints = to_list(constraints)
-        if not all([isinstance(y, Constraint) for y in constraints]):
+        targets = to_list(targets)
+        if not all([isinstance(y, Constraint) for y in targets]):
             raise ValueError('Please provide a "list" of "Constraint"s.')
         # prepare network outputs.
         output_vars = []
-        for cond in constraints:
+        for cond in targets:
             output_vars += cond().outputs
         # prepare loss_functions.
         if isinstance(loss_func, str) and loss_func in ["mse", "mae"]:
@@ -92,7 +101,7 @@ class SciModel(object):
         # Set the variables.
         self._model = model
         self._inputs = inputs
-        self._constraints = constraints
+        self._constraints = targets
         self._loss_func = loss_func
 
         # Plot to file if requested.

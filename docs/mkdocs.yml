@@ -22,7 +22,7 @@ docs_dir: sources
 site_dir: ../../SciANN_site
 repo_url: https://github.com/sciann/sciann
 site_url: https://sciann.com/
-site_description: 'Documentation for SciANN, the Python Deep Learning library.'
+site_description: 'Documentation for SciANN.'
 
 # Math markdown. 
 markdown_extensions: [extra, tables, fenced_code]
@@ -34,6 +34,8 @@ nav:
 - Getting started:
   - Guide to SciANN model: getting-started/scimodel-guide.md
   - Guide to Functional: getting-started/functional-guide.md
+- Examples:
+  - Curve fitting in 1D: examples/example-fitting-1d.md
 - SciModels: scimodels.md
 - Functionals: functionals.md
 - Variables: variables.md

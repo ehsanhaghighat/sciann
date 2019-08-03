@@ -12,16 +12,20 @@ Use SciANN if you need a deep learning library that:
 
 Read the documentation at [SicANN.com](https://sciann.com).
 
-Cite SciANN for your work at:
- 
-    @misc{haghighat2019sciann, 
-        title={SciANN: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks}, 
-        author={Haghighat, Ehsan and Juanes, Ruben}, 
-        url={https://github.com/sciann/sciann.git}, 
-        year={2019} 
-    }
 
-Sciann is compatible with: __Python 2.7-3.6__.
+Cite SciANN in your publications if it helps your research:
+
+```
+@misc{haghighat2019sciann, 
+    title={SciANN: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks}, 
+    author={Haghighat, Ehsan and Juanes, Ruben}, 
+    howpublished={\url{https://sciann.com}}, 
+    url = {https://github.com/sciann/sciann.git}
+year={2019} 
+}
+```
+
+SciANN is compatible with: __Python 2.7-3.6__.
 
 
 ------------------

@@ -4,14 +4,20 @@ from __future__ import division
 
 
 from . import constraints
-from . import engine
+from . import functionals
+from . import models
 from . import utils
+
+from .functionals.functional import Functional
+from .functionals.variable import Variable
+from .functionals.field import Field
+from .functionals.parameter import Parameter
+from .models.model import SciModel
+from .constraints import Constraint, Data, Tie
 
 # Also importable from root
 from .utils import math
-from .engine.functional import *
-from .engine.models import *
-from .constraints import *
+
 
 # SciANN.
 __author__ = "Ehsan Haghighat"
@@ -20,7 +26,7 @@ __copyright__ = "Copyright 2019, Physics-Informed Deep Learning"
 __credits__ = []
 __url__ = "http://github.com/sciann/sciann]"
 __license__ = "MIT"
-__version__ = "0.1.4"
+__version__ = "0.2.0"
 __cite__ = \
     '@misc{haghighat2019sciann, \n' +\
     '    title={SciANN: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks}, \n' +\

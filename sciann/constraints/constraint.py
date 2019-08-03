@@ -33,7 +33,7 @@ class Constraint(object):
         # check the inputs.
         assert isinstance(var, (str, type(None))), \
             "Expected a Layer Name of type str. "
-        assert (cond is None or callable(cond) or K.is_tensor(cond)), \
+        assert (cond is None or callable(cond) or is_tensor(cond)), \
             "Expected a function or a Tensor as input. "
 
         if ids is not None:

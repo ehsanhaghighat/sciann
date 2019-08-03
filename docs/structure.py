@@ -40,7 +40,6 @@ from sciann import SciModel
 from sciann import constraints
 from sciann import utils
 
-
 EXCLUDE = {
     'Constraint'
 }
