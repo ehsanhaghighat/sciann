@@ -13,10 +13,6 @@ from keras.layers import Concatenate
 
 from .field import Field
 
-from keras.initializers import random_uniform, glorot_normal
-default_bias_initializer = random_uniform()
-default_kernel_initializer = glorot_normal()
-
 
 class Functional(object):
     """ Configures the Functional object (Neural Network).
@@ -50,8 +46,8 @@ class Functional(object):
                  hidden_layers=None,
                  activation="linear",
                  enrichment="linear",
-                 kernel_initializer=default_kernel_initializer,
-                 bias_initializer=default_bias_initializer,
+                 kernel_initializer=default_kernel_initializer(),
+                 bias_initializer=default_bias_initializer(),
                  dtype=None,
                  trainable=True,
                  **kwargs,):

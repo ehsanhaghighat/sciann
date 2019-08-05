@@ -12,6 +12,7 @@ from keras.utils import plot_model
 
 from ..functionals import Variable
 from ..functionals import RadialBasis
+from ..constraints import Data, Tie
 
 
 class SciModel(object):
@@ -25,9 +26,9 @@ class SciModel(object):
             to be satisfied during the training. Expected list members are:
             - Entries of type `Constraint`, such as Data, Tie, etc.
             - Entries of type `Functional` can be:
-                . A single `Functional`: will be treated as a zero constraint.
+                . A single `Functional`: will be treated as a Data constraint.
+                    The object can be just a `Functional` or any derivatives of `Functional`s.
                     An example is a PDE that is supposed to be zero.
-                . A tuple of (`Functional`, data: np.ndarray): will be treated as a `Constraint` of type `Data`.
                 . A tuple of (`Functional`, `Functional`): will be treated as a `Constraint` of type `Tie`.
             - If you need to impose more complex types of constraints or
                 to impose a constraint partially in a specific part of region,
@@ -67,9 +68,24 @@ class SciModel(object):
                     'Inconsistent inputs: `constraints`, `conditions`, and `targets` are all equivalent keywords '
                     '- pass all targets as a list to `SciModel`. '
                 )
+        # setup constraints.
         targets = to_list(targets)
-        if not all([is_constraint(y) for y in targets]):
-            raise ValueError('Please provide a "list" of "Constraint"s.')
+        for i, y in enumerate(targets):
+            if not is_constraint(y):
+                if is_functional(y):
+                    # Case of Data-type constraint.
+                    targets[i] = Data(y)
+                elif isinstance(y, tuple) and \
+                        len(y) == 2 and \
+                        is_functional(y[0]) and is_functional(y[1]):
+                    # Case of Tie-type constraint.
+                    targets[i] = Tie(y[0], y[1])
+                else:
+                    # Not recognised.
+                    raise ValueError(
+                        'The {}th target entry is not of type `Constraint` or `Functional` - '
+                        'received \n ++++++ {} '.format(i, y)
+                    )
         # prepare network outputs.
         output_vars = []
         for cond in targets:
@@ -97,13 +113,11 @@ class SciModel(object):
             # optimizer=k.optimizers.SGD(lr=0.001, momentum=0.0, decay=0.0, nesterov=False),
             # optimizer = k.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
         )
-
         # Set the variables.
         self._model = model
         self._inputs = inputs
         self._constraints = targets
         self._loss_func = loss_func
-
         # Plot to file if requested.
         if plot_to_file is not None:
             plot_model(self._model, to_file=plot_to_file)
@@ -147,6 +161,7 @@ class SciModel(object):
 
     def solve(self,
               x_true,
+              y_true,
               weights=None,
               epochs=10,
               batch_size=2**8,
@@ -158,15 +173,28 @@ class SciModel(object):
         """Performs the training on the model.
 
         # Arguments
-            epochs: Integer. Number of epochs to train the model.
+            x_true: list of `Xs` associated to targets of `Y`.
+                Expecting a list of np.ndarray of size (N,1) each,
+                with N as the sample size.
+            y_true: list of true `Ys` associated to the targets defined during model setup.
+                Expecting the same size as list of targets defined in `SciModel`.
+                    - To impose the targets at specific `Xs` only,
+                        pass a tuple of `(ids, y_true)` for that target.
+            weights (np.ndarray): A global sample weight to be applied to samples.
+                Expecting an array of shape (N,1), with N as the sample size.
+                Default value is `one` to consider all samples equally important.
+            epochs (Integer): Number of epochs to train the model.
                 An epoch is an iteration over the entire `x` and `y`
                 data provided.
-            batch_size: Integer or 'None'.
+            batch_size (Integer): or 'None'.
                 Number of samples per gradient update.
                 If unspecified, 'batch_size' will default to 128.
             shuffle: Boolean (whether to shuffle the training data).
                 Default value is True.
             callbacks: List of `keras.callbacks.Callback` instances.
+            stop_after: To stop after certain missed epochs.
+                Defaulted to 100.
+            default_zero_weight: a small number for zero sample-weight.
 
         # Returns
             A 'History' object after performing fitting.
@@ -189,36 +217,32 @@ class SciModel(object):
             weights = np.ones(num_sample)
         else:
             if len(weights.shape)!=1 or \
-                weights.shape[0] != num_sample:
+                    weights.shape[0] != num_sample:
                 raise ValueError(
                     'Input error: `weights` should have dimension 1 with '
                     'the same sample length as `Xs. '
                 )
 
-        y_true, sample_weights = [], []
-        for c in self._constraints:
-            # prepare sample weight.
-            if c.ids is None:
-                ids = ids_all
-                wei = [weights for yi in c.cond.outputs]
-            else:
-                ids = c.ids
-                wei = [np.zeros(num_sample)+default_zero_weight for yi in c.cond.outputs]
-                for w in wei:
-                    w[ids] = weights[ids]
-                    w[ids] *= sum(weights)/sum(w[ids])
-            # prepare y_true.
-            sol = [np.zeros(((num_sample,) + k.backend.int_shape(yi)[1:])) for yi in c.cond.outputs]
-            if c.sol is not None:
-                for yi, soli in zip(sol, c.sol):
-                    yi[ids, :] = soli
+        y_true = to_list(y_true)
+        assert len(y_true)==len(self._constraints), \
+            'Miss-match between expected targets (constraints) defined in `SciModel` and ' \
+            'the provided `y_true`s - expecting the same number of data points. '
+
+        sample_weights, y_star = [], []
+        for i, yt in enumerate(y_true):
+            c = self._constraints[i]
+            # verify entry.
+            ys, wei = SciModel._prepare_data(
+                c.cond.outputs, to_list(yt),
+                weights, num_sample, default_zero_weight
+            )
             # add to the list.
-            y_true += sol
+            y_star += ys
             sample_weights += wei
 
         # perform the training.
         history = self._model.fit(
-            x_true, y_true,
+            x_true, y_star,
             sample_weight=sample_weights,  #sums to number of samples.
             epochs=epochs,
             batch_size=batch_size,
@@ -292,3 +316,58 @@ class SciModel(object):
         else:
             raise ValueError
 
+    @staticmethod
+    def _prepare_data(cond_outputs, y_true, global_weights, num_sample, default_zero_weight):
+        ys, weis = [], []
+        ids_all = np.arange(0, num_sample)
+        # prepare sample weight.
+        for i, yt in enumerate(to_list(y_true)):
+            ids = None
+            yc = cond_outputs[i]
+            if isinstance(yt, tuple) and len(yt) == 2:
+                ids = yt[0]
+                ys.append(yt[1])
+            elif isinstance(yt, (np.ndarray, str, float, int, type(None))):
+                ys.append(yt)
+            else:
+                raise ValueError(
+                    'Unrecognized entry - please provide a list of `data` or tuples of `(ids, data)`'
+                    ' for each target defined in `SciModel`. '
+                )
+            # Define weights of samples.
+            if ids is None:
+                ids = ids_all
+                wei = global_weights
+            else:
+                wei = np.zeros(num_sample) + default_zero_weight
+                wei[ids] = global_weights[ids]
+                wei[ids] *= sum(global_weights)/sum(wei[ids])
+            weis.append(wei)
+            # preparing targets.
+            if isinstance(ys[-1], np.ndarray):
+                if not (ys[-1].shape[1:] == k.backend.int_shape(yc)[1:]):
+                    try:
+                        ys[-1] = ys[-1].reshape((-1,) + k.backend.int_shape(yc)[1:])
+                    except (ValueError, TypeError):
+                        raise ValueError(
+                            'Dimension of expected `y_true` does not match with defined `Constraint`'
+                        )
+            elif isinstance(ys[-1], str):
+                if ys[-1] == 'zeros':
+                    ys[-1] = np.zeros((num_sample, ) + k.backend.int_shape(yc)[1:])
+                elif ys[-1] == 'ones':
+                    ys[-1] = np.ones((num_sample, ) + k.backend.int_shape(yc)[1:])
+                else:
+                    raise ValueError(
+                        'Unexpected `str` entry - only accepts `zeros` or `ones`.'
+                    )
+            elif isinstance(ys[-1], (int, float)):
+                ys[-1] = np.ones((num_sample, ) + k.backend.int_shape(yc)[1:]) * float(ys[-1])
+            elif isinstance(ys[-1], type(None)):
+                ys[-1] = np.zeros((num_sample, ) + k.backend.int_shape(yc)[1:])
+            else:
+                raise ValueError(
+                    'Unsupported entry - {} '.format(ys[-1])
+                )
+
+        return ys, weis

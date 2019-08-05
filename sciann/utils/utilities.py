@@ -19,6 +19,8 @@ from keras.backend import set_floatx
 from keras.utils.generic_utils import to_list
 from keras.utils.generic_utils import unpack_singleton
 from keras.utils import plot_model
+from keras.initializers import random_uniform as default_bias_initializer
+from keras.initializers import glorot_normal as default_kernel_initializer
 
 
 def get_activation(activation):

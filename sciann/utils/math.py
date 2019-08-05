@@ -10,7 +10,8 @@ from keras.layers import Lambda
 from keras.layers import Input
 from keras.models import Model
 
-from ..utils import *
+from .utilities import *
+from .validations import *
 
 
 def pow(f, a):
@@ -404,6 +405,18 @@ def square(x):
         A new functional object.
     """
     return _apply_function(x, 'square')
+
+
+def relu(x):
+    """Computes relu of x element-wise.
+
+    # Arguments
+        x: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    return _apply_function(x, 'relu')
 
 
 def _apply_function(x, fname):

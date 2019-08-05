@@ -14,10 +14,6 @@ from keras.layers import InputSpec
 from .functional import Functional
 from .variable import Variable
 
-import keras as k
-default_bias_initializer = k.initializers.random_uniform()
-default_kernel_initializer = k.initializers.glorot_normal()
-
 
 class Parameter(Functional):
     def __init__(self,

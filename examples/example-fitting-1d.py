@@ -28,14 +28,14 @@ x = Variable('x', dtype='float32')
 # Each network is defined by Functional.
 y = Functional('y', x, [10, 10, 10], activation='tanh')
 
-# The training data is a condition (constraint) on the model.
-c1 = Data(y, y_true)
+# Define the target (output) of your model.
+c1 = Data(y)
 
 # The model is formed with input `x` and condition `c1`.
 model = SciModel(x, c1)
 
 # Training: .solve runs the optimization and finds the parameters.
-model.solve(x_true, batch_size=32, epochs=100)
+model.solve(x_true, y_true, batch_size=32, epochs=100)
 
 # used to evaluate the model after the training.
 y_pred = model.predict(x_true)
