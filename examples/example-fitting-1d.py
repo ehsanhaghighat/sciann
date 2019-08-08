@@ -34,8 +34,8 @@ c1 = Data(y)
 # The model is formed with input `x` and condition `c1`.
 model = SciModel(x, c1)
 
-# Training: .solve runs the optimization and finds the parameters.
-model.solve(x_true, y_true, batch_size=32, epochs=100)
+# Training: .train runs the optimization and finds the parameters.
+model.train(x_true, y_true, batch_size=32, epochs=100)
 
 # used to evaluate the model after the training.
 y_pred = model.predict(x_true)

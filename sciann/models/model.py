@@ -159,10 +159,11 @@ class SciModel(object):
     def summary(self, *args, **kwargs):
         return self._model.summary(*args, **kwargs)
 
-    def solve(self,
+    def train(self,
               x_true,
               y_true,
               weights=None,
+              target_weights=None,
               epochs=10,
               batch_size=2**8,
               shuffle=True,
@@ -183,6 +184,7 @@ class SciModel(object):
             weights (np.ndarray): A global sample weight to be applied to samples.
                 Expecting an array of shape (N,1), with N as the sample size.
                 Default value is `one` to consider all samples equally important.
+            target_weights (list): A weight for each target defined in `y_true`.
             epochs (Integer): Number of epochs to train the model.
                 An epoch is an iteration over the entire `x` and `y`
                 data provided.
@@ -197,7 +199,7 @@ class SciModel(object):
             default_zero_weight: a small number for zero sample-weight.
 
         # Returns
-            A 'History' object after performing fitting.
+            A Keras 'History' object after performing fitting.
         """
         if callbacks is None:
             callbacks = [
@@ -240,6 +242,17 @@ class SciModel(object):
             y_star += ys
             sample_weights += wei
 
+        if target_weights is not None:
+            if not(isinstance(target_weights, list) and
+                   len(target_weights) == len(y_true)):
+                raise ValueError(
+                    'Expected a list of weights for the same size as the targets '
+                    '- was provided {}'.format(target_weights)
+                )
+            else:
+                for i, cw in enumerate(target_weights):
+                    sample_weights[i] *= cw
+
         # perform the training.
         history = self._model.fit(
             x_true, y_star,
@@ -251,6 +264,37 @@ class SciModel(object):
             **kwargs,
         )
         return history
+
+    def solve(self,
+              x_true,
+              y_true,
+              weights=None,
+              target_weights=None,
+              epochs=10,
+              batch_size=2**8,
+              shuffle=True,
+              callbacks=None,
+              stop_after=100,
+              default_zero_weight=1.0e-10,
+              **kwargs,):
+        """ This is a legacy method - please use `train` instead of `solve`.
+        """
+        print('\n'
+              'WARNING: SciModel.solve \n'
+              '++++ Legacy method: please use `train` instead of `solve`. \n')
+        self.train(
+            x_true,
+            y_true,
+            weights,
+            target_weights,
+            epochs,
+            batch_size,
+            shuffle,
+            callbacks,
+            stop_after,
+            default_zero_weight,
+            **kwargs
+        )
 
     def predict(self, x,
                 batch_size=None,
