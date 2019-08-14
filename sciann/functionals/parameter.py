@@ -16,8 +16,22 @@ from .variable import Variable
 
 
 class Parameter(Functional):
+    """ Parameter functional to be used for parameter inversion.
+        Inherited from Dense layer.
+
+    # Arguments
+        val (float): Initial value for the parameter.
+        min_max ([MIN, MAX]): A range to constrain the value of parameter.
+            This constraint will overwrite non_neg constraint if both are chosen.
+        inputs (Variables): List of `Variable`s to the parameters.
+        name (str): A name for the Parameter layer.
+        non_neg (boolean): True (default) if only non-negative values are expected.
+        **kwargs: keras.layer.Dense accepted arguments.
+    """
+
     def __init__(self,
                  val=1.0,
+                 min_max=None,
                  inputs=None,
                  name=None,
                  non_neg=None):
@@ -34,7 +48,7 @@ class Parameter(Functional):
         if non_neg is None:
             non_neg = True
         layers.append(
-            ParameterBase(val=val, non_neg=non_neg, name=name)
+            ParameterBase(val=val, min_max=min_max, non_neg=non_neg, name=name)
         )
 
         lay = Concatenate()
@@ -50,15 +64,23 @@ class Parameter(Functional):
 
 
 class ParameterBase(Dense):
-    """ Parameter class to be used for parameter inversion.
+    """ Base Parameter class to be used for parameter inversion.
         Inherited from Dense layer.
 
     # Arguments
         val (float): Initial value for the parameter.
+        min_max ([MIN, MAX]): A range to constrain the value of parameter.
+            This constraint will overwrite non_neg constraint if both are chosen.
         non_neg (boolean): True (default) if only non-negative values are expected.
         **kwargs: keras.layer.Dense accepted arguments.
     """
-    def __init__(self, val=1.0, non_neg=True, **kwargs):
+    def __init__(self, val=1.0, min_max=None, non_neg=True, **kwargs):
+        cst = None
+        if min_max is not None:
+            cst = k.constraints.min_max_norm(min_value=min_max[0], max_value=min_max[1])
+            val = (min_max[0] + min_max[1])/2.0
+        elif non_neg:
+            cst = k.constraints.non_neg()
         super(ParameterBase, self).__init__(
             units=1,
             use_bias=True,
@@ -68,7 +90,7 @@ class ParameterBase(Dense):
             bias_regularizer=None,
             activity_regularizer=None,
             kernel_constraint=None,
-            bias_constraint=k.constraints.non_neg() if non_neg else None,
+            bias_constraint=cst,
             **kwargs,
         )
 

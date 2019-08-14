@@ -282,7 +282,7 @@ class SciModel(object):
         print('\n'
               'WARNING: SciModel.solve \n'
               '++++ Legacy method: please use `train` instead of `solve`. \n')
-        self.train(
+        return self.train(
             x_true,
             y_true,
             weights,
@@ -312,13 +312,23 @@ class SciModel(object):
             List of numpy array of the size of network outputs.
 
         # Raises
-
+            ValueError if number of `x`s is different from number of `inputs`.
         """
+        if len(to_list(x)) != len(self._inputs):
+            raise ValueError(
+                "Please provide consistent number of inputs as the model is defined: "
+                "Expected {} - provided {}".format(len(self._inputs), len(to_list(x)))
+            )
         return self._model.predict(x, batch_size, verbose, steps)
 
     def eval(self, *args):
         if len(args) == 1:
             x_data = to_list(args[0])
+            if len(x_data) != len(self._inputs):
+                raise ValueError(
+                    "Please provide consistent number of inputs as the model is defined: "
+                    "Expected {} - provided {}".format(len(self._inputs), len(x_data))
+                )
             if not all([isinstance(xi, np.ndarray) for xi in x_data]):
                 raise ValueError("Please provide input data to the network. ")
             return unpack_singleton(self.predict(x_data))
