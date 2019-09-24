@@ -21,7 +21,11 @@ class RadialBasis(Functional):
 
         rb_vars = to_list(rb_vars)
         if not all([isinstance(x, RadialBasisBase) for x in rb_vars]):
-            raise TypeError
+            try:
+                for i, rbv in enumerate(rb_vars):
+                    rb_vars[i] = RadialBasisBase(rbv)
+            except (ValueError, TypeError):
+                raise ValueError('Expected `str` or `RadialBasisBase` as rb_vars. ')
 
         if len(vars) != len(rb_vars):
             raise ValueError

@@ -5,17 +5,17 @@ from __future__ import print_function
 from ..utils import *
 
 from keras.layers import InputLayer
-from .functional import Functional
+from .rnn_functional import RNNFunctional
 
 
-class Variable(Functional):
-    """ Configures the `Variable` object for the network's input.
+class RNNVariable(RNNFunctional):
+    """ Configures the `LSTMVariable` object for the network's input.
 
     # Arguments
+        units (int): number of time units in an recurrent architecture.
+            A minimum of 2 is needed.
         name: String.
             Required as derivatives work only with layer names.
-        units: Int.
-            Number of feature of input var.
         tensor: Tensorflow `Tensor`.
             Can be pass as the input path.
         dtype: data-type of the network parameters, can be
@@ -25,8 +25,8 @@ class Variable(Functional):
 
     """
     def __init__(self,
+                 units,
                  name=None,
-                 units=1,
                  tensor=None,
                  dtype=None):
 
@@ -35,14 +35,17 @@ class Variable(Functional):
         elif not dtype == floatx():
             set_floatx(dtype)
 
+        assert isinstance(units, int) and units>=2, \
+            'RNN needs a minimum of 2 time units. '
+
         layer = InputLayer(
-            batch_input_shape=(None, units),
+            batch_input_shape=(None, units, 1),
             input_tensor=tensor,
             name=name,
             dtype=dtype
         )
 
-        super(Variable, self).__init__(
+        super(RNNVariable, self).__init__(
             layers=to_list(layer),
             inputs=to_list(layer.input),
             outputs=to_list(layer.output),

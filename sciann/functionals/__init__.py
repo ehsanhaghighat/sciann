@@ -10,8 +10,16 @@ from . import parameter
 from . import radialbasis
 from . import variable
 
+from . import rnn_field
+from . import rnn_functional
+from . import rnn_variable
+
 from .functional import Functional
 from .field import Field
 from .parameter import Parameter
 from .variable import Variable
 from .radialbasis import RadialBasis
+
+from .rnn_functional import RNNFunctional
+from .rnn_variable import RNNVariable
+from .rnn_field import RNNField

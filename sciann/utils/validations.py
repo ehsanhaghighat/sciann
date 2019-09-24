@@ -22,7 +22,7 @@ def is_functional(f):
         ValueError: if the object cannot be tested with `isinstance`.
 
     """
-    if isinstance(f, sciann.Functional):
+    if isinstance(f, (sciann.Functional, sciann.functionals.RNNFunctional)):
         return True
 
     else:
@@ -42,7 +42,7 @@ def validate_functional(f):
         ValueError: if the object is not a Functional object.
 
     """
-    if isinstance(f, sciann.Functional):
+    if isinstance(f, (sciann.Functional, sciann.functionals.RNNFunctional)):
         return True
 
     else:
@@ -152,7 +152,7 @@ def is_field(f):
         ValueError: if the object cannot be tested with `isinstance`.
 
     """
-    if isinstance(f, sciann.Field):
+    if isinstance(f, (sciann.Field, sciann.functionals.RNNField)):
         return True
 
     else:
@@ -172,7 +172,7 @@ def validate_field(f):
         ValueError: if the object is not a Field object.
 
     """
-    if isinstance(f, sciann.Field):
+    if isinstance(f, (sciann.Field, sciann.functionals.RNNField)):
         return True
 
     else:
@@ -196,7 +196,7 @@ def is_variable(f):
         ValueError: if the object cannot be tested with `isinstance`.
 
     """
-    if isinstance(f, sciann.Variable):
+    if isinstance(f, (sciann.Variable, sciann.functionals.RadialBasis, sciann.functionals.RNNVariable)):
         return True
 
     else:
@@ -216,7 +216,7 @@ def validate_variable(f):
         ValueError: if the object is not a Variable object.
 
     """
-    if isinstance(f, sciann.Variable):
+    if isinstance(f, (sciann.Variable, sciann.functionals.RadialBasis, sciann.functionals.RNNVariable)):
         return True
 
     else:

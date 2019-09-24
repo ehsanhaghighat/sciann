@@ -5,7 +5,7 @@ import numpy as np
 from sklearn.neighbors import BallTree
 
 
-def process_data_for_radial_basis(*args):
+def process_data_for_radial_basis(*args, **kwargs):
     """ Find closest point to each node in xs.
 
     # Arguments
@@ -26,13 +26,22 @@ def process_data_for_radial_basis(*args):
         size_rb = args[2]
     else:
         raise ValueError
+
+    # prepare data.
+    if all([x.shape[-1]!=1 for x in xs]):
+        for i, x in enumerate(xs):
+            xs[i] = x.reshape(x.shape + (1,))
     xsc = np.concatenate(xs, axis=-1)
+
     tree = BallTree(xsc, size_rb)
     ids = tree.query(xsc, size_rb, return_distance=False)
-    xrbs = [x[ids].reshape(-1, size_rb) for x in xs]
 
-    if ys is None:
-        return xrbs
+    if 'return_ids' in kwargs and kwargs['return_ids']:
+        return ids
     else:
-        yrbs = [y[ids].reshape(-1, size_rb) for y in ys]
-        return xrbs, yrbs
+        xrbs = [x[ids].reshape(-1, size_rb) for x in xs]
+        if ys is None:
+            return xrbs
+        else:
+            yrbs = [y[ids].reshape(-1, size_rb) for y in ys]
+            return xrbs, yrbs

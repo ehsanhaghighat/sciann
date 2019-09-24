@@ -419,7 +419,21 @@ def relu(x):
     return _apply_function(x, 'relu')
 
 
-def _apply_function(x, fname):
+def mean(x, **kwargs):
+    """Apply mean to the `Functional` objects on far-right axis.
+
+    # Arguments
+        x: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    if "keepdims" not in kwargs:
+        kwargs["keepdims"] = True
+    return _apply_function(x, 'mean', **kwargs)
+
+
+def _apply_function(x, fname, **kwargs):
     """Apply `fname` function to x element-wise.
 
     # Arguments
@@ -432,7 +446,7 @@ def _apply_function(x, fname):
     res = x.copy()
 
     fun = get_activation(fname)
-    lmbd = [Lambda(lambda x: fun(x)) for X in x.outputs]
+    lmbd = [Lambda(lambda x: fun(x, **kwargs)) for X in x.outputs]
     for l in lmbd:
         l.name = "{}/".format(fname) + l.name.split("_")[-1]
     # res.append_to_layers(lmbd)
@@ -485,7 +499,7 @@ def lambda_gradient(ys, xs, order=1, name=''):
     grads, layers = [], []
     for y in to_list(ys):
         lay = Lambda(lambda y: gradients(y, xs, order))
-        lay.name = name_prefix + name + '/' + lay.name.split("_")[-1]
+        lay.name = name_prefix + name + '/' + lay.name
         layers += to_list(lay)
         grads += to_list(lay(y))
 
@@ -531,11 +545,11 @@ def diff(f, *args, **kwargs):
                 x_name = x_lay.name
                 x = x_lay.output
             else:
-                raise TypeError('Unsupport `x` entry. ')
+                raise TypeError('Unsupported `x` entry. ')
             
         if len(args) <= 1:
             y = unpack_singleton(f.outputs)
-            assert  K.is_tensor(y), \
+            assert K.is_tensor(y), \
                 'multiple outputs detected - please provide a `y` name. '
             y_name = y.name.split('/')[0]
         else:
@@ -548,7 +562,7 @@ def diff(f, *args, **kwargs):
                 y_name = y_lay.name
                 y = y_lay.output
             else:
-                raise TypeError('Unsupport `y` entry. ')
+                raise TypeError('Unsupported `y` entry. ')
         
     except (StopIteration, ValueError):
         print("Did not find the layer {}. ".format(args))
@@ -557,12 +571,13 @@ def diff(f, *args, **kwargs):
     order = 1
     if 'order' in kwargs.keys():
         order = kwargs['order']
-            
+
     res = f.copy()
     
     lay, tens = lambda_gradient(
         y, x, order, "{}_{}".format(y_name, x_name)
     )
+
     res.append_to_layers(to_list(lay))
     res.outputs = to_list(tens)
 
@@ -588,4 +603,31 @@ def radial_basis(xs, ci, radii):
     for x in xs:
         validate_variable(x)
 
+    return exp(-sum([(x - c)**2 for x, c in zip(xs, ci)])/radii**2)
+
+
+def radial_basis2(xs, ci, radii):
+    """Apply `radial_basis` function to x element-wise.
+
+    # Arguments
+        xs: List of functional objects.
+        ci: Center of basis functional (same length as xs).
+        radii: standard deviation or radius from the center.
+
+    # Returns
+        A new functional object.
+    """
+    assert len(xs) == len(ci)
+    assert radii > 0.0
+    assert all([is_variable(x) for x in xs])
+    assert isinstance(xs, list) and isinstance(ci, list)
+
+    for x in xs:
+        validate_variable(x)
+
+    d = xs[0] - ci[0]
+    for i in range(1, len(xs)):
+        d += xs[i] - ci[i]
+    d /= radii
+    
     return exp(-sum([(x - c)**2 for x, c in zip(xs, ci)])/radii**2)

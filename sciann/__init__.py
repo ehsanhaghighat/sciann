@@ -26,7 +26,7 @@ __copyright__ = "Copyright 2019, Physics-Informed Deep Learning"
 __credits__ = []
 __url__ = "http://github.com/sciann/sciann]"
 __license__ = "MIT"
-__version__ = "0.2.2"
+__version__ = "0.2.4"
 __cite__ = \
     '@misc{haghighat2019sciann, \n' +\
     '    title={SciANN: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks}, \n' +\
@@ -35,14 +35,19 @@ __cite__ = \
     '    year={2019} \n' +\
     '}'
 
-
 # Import message.
 _header = '--------------------- {} {} ---------------------'.format(str.upper(__name__), str(__version__))
 _footer = len(_header)*'-'
 __welcome__ = \
     '{} \n'.format(_header) +\
-    'Please review the documentation at `https://sciann.com`. \n' +\
+    'Please review the documentation at https://sciann.com. \n' +\
     '{} \n'.format(__cite__) +\
     _footer
 
-print(__welcome__)
+
+import os
+if 'SCIANN_WELCOME_MSG' in os.environ.keys() and \
+        os.environ['SCIANN_WELCOME_MSG']=='-1':
+    pass
+else:
+    print(__welcome__)

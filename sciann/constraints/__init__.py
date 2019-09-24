@@ -17,3 +17,4 @@ from .tie import Tie
 from .dirichlet import Dirichlet
 from .neumann import Neumann
 from .pde import PDE
+from .minmax import MinMax

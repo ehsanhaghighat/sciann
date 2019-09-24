@@ -48,7 +48,7 @@ class SciModel(object):
                  **kwargs):
         # strictly check for inputs to be of type variable.
         inputs = to_list(inputs)
-        if not all([isinstance(x, (Variable, RadialBasis)) for x in inputs]):
+        if not all([is_variable(x) for x in inputs]):
             raise ValueError(
                 'Please provide a `list` of `Variable` or `RadialBasis` objects for inputs. '
             )
@@ -91,7 +91,7 @@ class SciModel(object):
         for cond in targets:
             output_vars += cond().outputs
         # prepare loss_functions.
-        if isinstance(loss_func, str) and loss_func in ["mse", "mae"]:
+        if isinstance(loss_func, str):
             loss_func = SciModel.loss_functions(loss_func)
         elif not callable(loss_func):
             raise TypeError(
@@ -208,11 +208,24 @@ class SciModel(object):
                 ),
                 k.callbacks.TerminateOnNaN(),
             ]
-
         # prepare X,Y data.
-        x_true = [x.reshape(-1, 1) if len(x.shape)==1 else x for x in to_list(x_true)]
+        x_true = to_list(x_true)
+        for i, (x, xt) in enumerate(zip(x_true, self._model.inputs)):
+            x_shape = tuple(xt.get_shape().as_list())
+            if x.shape != x_shape:
+                try:
+                    x_true[i] = x.reshape((-1,) + x_shape[1:])
+                except:
+                    print(
+                        'Could not automatically convert the inputs to be ' 
+                        'of the same size as the expected input tensors. ' 
+                        'Please provide inputs of the same dimension as the `Variables`. '
+                    )
+                    assert False
+
         num_sample = x_true[0].shape[0]
-        assert all([x.shape[0]==num_sample for x in x_true[1:]])
+        assert all([x.shape[0]==num_sample for x in x_true[1:]]), \
+            'Inconsistent sample size among `Xs`. '
         ids_all = np.arange(0, num_sample)
 
         if weights is None:
@@ -296,14 +309,14 @@ class SciModel(object):
             **kwargs
         )
 
-    def predict(self, x,
+    def predict(self, xs,
                 batch_size=None,
                 verbose=0,
                 steps=None):
         """ Predict output from network.
 
         # Arguments
-            x:
+            xs:
             batch_size:
             verbose:
             steps:
@@ -312,14 +325,29 @@ class SciModel(object):
             List of numpy array of the size of network outputs.
 
         # Raises
-            ValueError if number of `x`s is different from number of `inputs`.
+            ValueError if number of `xs`s is different from number of `inputs`.
         """
-        if len(to_list(x)) != len(self._inputs):
+        xs = to_list(xs)
+        if len(xs) != len(self._inputs):
             raise ValueError(
                 "Please provide consistent number of inputs as the model is defined: "
                 "Expected {} - provided {}".format(len(self._inputs), len(to_list(x)))
             )
-        return self._model.predict(x, batch_size, verbose, steps)
+        # prepare X,Y data.
+        for i, (x, xt) in enumerate(zip(xs, self._model.inputs)):
+            x_shape = tuple(xt.get_shape().as_list())
+            if x.shape != x_shape:
+                try:
+                    xs[i] = x.reshape((-1,) + x_shape[1:])
+                except:
+                    print(
+                        'Could not automatically convert the inputs to be ' 
+                        'of the same size as the expected input tensors. ' 
+                        'Please provide inputs of the same dimension as the `Variables`. '
+                    )
+                    assert False
+
+        return self._model.predict(xs, batch_size, verbose, steps)
 
     def eval(self, *args):
         if len(args) == 1:
@@ -356,17 +384,23 @@ class SciModel(object):
         # Arguments
             method: String.
                 "mse" for `Mean Squared Error` or
-                "mae" for 'Mean Absolute Error'.
+                "mae" for `Mean Absolute Error` or
+                "se" for `Squared Error` or
+                "ae" for `Absolute Error`.
         # Returns
             Callable function that gets (y_true, y_pred) as the input and
                 returns the loss value as the output.
         # Raises
             ValueError if anything other than "mse" or "mae" is passed.
         """
-        if method == "mse":
+        if method in ("mse", "mean_squared_error"):
             return lambda y_true, y_pred: K.mean(K.square(y_true - y_pred))
-        elif method == "mae":
+        elif method in ("mae", "mean_absolute_error"):
             return lambda y_true, y_pred: K.mean(K.abs(y_true - y_pred))
+        elif method in ("se", "squared_error"):
+            return lambda y_true, y_pred: K.sum(K.square(y_true - y_pred))
+        elif method in ("ae", "absolute_error"):
+            return lambda y_true, y_pred: K.sum(K.abs(y_true - y_pred))
         else:
             raise ValueError
 

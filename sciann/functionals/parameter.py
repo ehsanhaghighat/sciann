@@ -77,7 +77,7 @@ class ParameterBase(Dense):
     def __init__(self, val=1.0, min_max=None, non_neg=True, **kwargs):
         cst = None
         if min_max is not None:
-            cst = k.constraints.min_max_norm(min_value=min_max[0], max_value=min_max[1])
+            cst = MinMax(min_value=min_max[0], max_value=min_max[1])
             val = (min_max[0] + min_max[1])/2.0
         elif non_neg:
             cst = k.constraints.non_neg()
@@ -158,3 +158,31 @@ def validate_variable(f):
             'Use `Keras` or `TensorFlow` functions when applying to tensors '
             'or layers. '
         )
+
+
+# from keras.constraints import Constraint
+# class MinMax(Constraint):
+#     """MinMax weight constraint.
+#
+#     Constrains the weights incident to each hidden unit
+#     to have values between a lower bound and an upper bound.
+#
+#     # Arguments
+#         min_value: the minimum norm for the incoming weights.
+#         max_value: the maximum norm for the incoming weights.
+#     """
+#
+#     def __init__(self, min_value=0.0, max_value=1.0):
+#         self.min_value = min_value
+#         self.max_value = max_value
+#
+#     def __call__(self, w):
+#         d = self.max_value - self.min_value
+#         w = K.square(K.relu(w - self.max_value)) + K.square(K.relu(self.min_value - w))
+#         w = K.square(K.clip(w - self.max_value, 0.0, 100*d)) + \
+#             K.square(K.clip(self.min_value - w, 0.0, 100*d))
+#         return w / d**2
+#
+#     def get_config(self):
+#         return {'min_value': self.min_value,
+#                 'max_value': self.max_value}
