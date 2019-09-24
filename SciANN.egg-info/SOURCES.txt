@@ -26,6 +26,7 @@ docs/sources/utils.md
 docs/sources/variables.md
 docs/sources/why-use-sciann.md
 docs/sources/examples/curve-fitting-1d.md
+docs/sources/examples/example-fitting-1d-lstm.md
 docs/sources/examples/example-fitting-1d.md
 docs/sources/getting-started/functional-guide.md
 docs/sources/getting-started/scimodel-guide.md
