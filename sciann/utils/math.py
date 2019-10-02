@@ -479,6 +479,28 @@ def gradients(ys, xs, order=1):
     return ds
 
 
+def getitem(x, item):
+    """returns specific item of a tensor (Functional).
+
+    # Arguments
+        item: Item list.
+
+    # Returns
+        A new functional object.
+    """
+    validate_functional(x)
+    res = x.copy()
+
+    ys = []
+    lmbd = [Lambda(lambda xx: xx.__getitem__(item)) for xx in x.outputs]
+    for l, y in zip(lmbd, x.outputs):
+        # l.name = "slice/" + l.name.split("_")[-1]
+        ys.append(l(y))
+
+    res.outputs = ys
+    return res
+
+
 def lambda_gradient(ys, xs, order=1, name=''):
     """Returns the gradients of y in `ys` w.r.t. x in `xs` using Lambda layers.
     
@@ -532,7 +554,7 @@ def diff(f, *args, **kwargs):
     try:
         if len(args) == 0:
             x = unpack_singleton(f.inputs)
-            assert K.is_tensor(x), \
+            assert is_tensor(x), \
                 'multiple inputs detected - please provide an `x` name. '
             x_name = x.name.split('/')[0]
         else:
@@ -549,7 +571,7 @@ def diff(f, *args, **kwargs):
             
         if len(args) <= 1:
             y = unpack_singleton(f.outputs)
-            assert K.is_tensor(y), \
+            assert is_tensor(y), \
                 'multiple outputs detected - please provide a `y` name. '
             y_name = y.name.split('/')[0]
         else:

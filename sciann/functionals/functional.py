@@ -276,5 +276,8 @@ class Functional(object):
     def __pow__(self, power):
         return pow(self, power)
 
+    def __getitem__(self, item):
+        return getitem(self, item)
+
     def diff(self, *args, **kwargs):
         return diff(self, *args, **kwargs)

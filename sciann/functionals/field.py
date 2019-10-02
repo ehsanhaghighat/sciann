@@ -12,10 +12,10 @@ class Field(Dense):
     """ Configures the `Field` class for the model outputs.
 
     # Arguments
-        units: Positive integer.
-            Dimension of the output of the network.
         name: String.
             Assigns a layer name for the output.
+        units: Positive integer.
+            Dimension of the output of the network.
         activation: Callable.
             A callable object for the activation.
         kernel_initializer: Initializer for the kernel.
@@ -29,8 +29,9 @@ class Field(Dense):
     # Raises
 
     """
-    def __init__(self, units=1,
+    def __init__(self,
                  name=None,
+                 units=1,
                  activation=linear,
                  kernel_initializer=default_kernel_initializer(),
                  bias_initializer=default_bias_initializer(),

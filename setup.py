@@ -15,14 +15,14 @@ and is distributed under the MIT license.
 
 setup(
     name='SciANN',
-    version='0.2.5',
+    version='0.2.6',
     description='A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks.',
     long_description=long_description,
     author='Ehsan Haghighat',
     author_email='ehsan@sciann.com',
     license='MIT',
     url='https://github.com/sciann/sciann',
-    install_requires=['numpy>=1.9.1',
+    install_requires=['numpy>=1.16.4',
                       'scipy>=0.14',
                       'six>=1.9.0',
                       'pyyaml',
