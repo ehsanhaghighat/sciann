@@ -1,4 +1,4 @@
-# Fields
+# Intro
 
 `Field` is a layer to define outputs of each Functional. It is very much similar to Keras' `Dense` layer. 
 

@@ -1,4 +1,8 @@
-# Constraints:
+# Intro
+
+`Constraint` contains set of classes to impose conditions on the targets or 
+ their derivatives. This classes are designed as a way to impose constraints 
+ on different parts of targets and domain.   
 
 ---
 

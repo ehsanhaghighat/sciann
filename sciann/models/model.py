@@ -17,11 +17,10 @@ from ..constraints import Data, Tie
 
 class SciModel(object):
     """Configures the model for training.
-
+    Example:
     # Arguments
         inputs: Main variables (also called inputs, or independent variables) of the network, `xs`.
             They all should be of type `Variable`.
-
         targets: list all targets (also called outputs, or dependent variables)
             to be satisfied during the training. Expected list members are:
             - Entries of type `Constraint`, such as Data, Tie, etc.
@@ -33,7 +32,17 @@ class SciModel(object):
             - If you need to impose more complex types of constraints or
                 to impose a constraint partially in a specific part of region,
                 use `Data` or `Tie` classes from `Constraint`.
-
+        loss_func: defaulted to "mse" or "mean_squared_error".
+            It can be an string from supported loss functions, i.e. ("mse" or "mae").
+            Alternatively, you can create your own loss function and
+            pass the function handle (check Keras for more information).
+        optimizer: defaulted to "adam" optimizer.
+            It can be one of Keras accepted optimizers, e.g. "adam".
+            You can also pass more details on the optimizer:
+            - `optimizer = k.optimizers.RMSprop(lr=0.01, rho=0.9, epsilon=None, decay=0.0)`
+            - `optimizer = k.optimizers.SGD(lr=0.001, momentum=0.0, decay=0.0, nesterov=False)`
+            - `optimizer = k.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)`
+            Check our Keras documentation for further details. We have found
         plot_to_file: A string file name to output the network architecture.
 
     # Raises
@@ -44,6 +53,7 @@ class SciModel(object):
                  inputs=None,
                  targets=None,
                  loss_func="mse",
+                 optimizer="adam",
                  plot_to_file=None,
                  **kwargs):
         # strictly check for inputs to be of type variable.
@@ -105,13 +115,9 @@ class SciModel(object):
             **kwargs
         )
         # compile the model.
-        # multiple optimizers were tested, "ADAM" worked best on my tests.
         model.compile(
             loss=loss_func,
-            optimizer="adam",
-            # optimizer=k.optimizers.RMSprop(lr=0.01, rho=0.9, epsilon=None, decay=0.0),
-            # optimizer=k.optimizers.SGD(lr=0.001, momentum=0.0, decay=0.0, nesterov=False),
-            # optimizer = k.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False),
+            optimizer=optimizer,
         )
         # Set the variables.
         self._model = model
@@ -179,16 +185,15 @@ class SciModel(object):
                 with N as the sample size.
             y_true: list of true `Ys` associated to the targets defined during model setup.
                 Expecting the same size as list of targets defined in `SciModel`.
-                    - To impose the targets at specific `Xs` only,
-                        pass a tuple of `(ids, y_true)` for that target.
-            weights (np.ndarray): A global sample weight to be applied to samples.
+                - To impose the targets at specific `Xs` only, pass a tuple of `(ids, y_true)` for that target.
+            weights: (np.ndarray) A global sample weight to be applied to samples.
                 Expecting an array of shape (N,1), with N as the sample size.
                 Default value is `one` to consider all samples equally important.
-            target_weights (list): A weight for each target defined in `y_true`.
-            epochs (Integer): Number of epochs to train the model.
+            target_weights: (list) A weight for each target defined in `y_true`.
+            epochs: (Integer) Number of epochs to train the model.
                 An epoch is an iteration over the entire `x` and `y`
                 data provided.
-            batch_size (Integer): or 'None'.
+            batch_size: (Integer) or 'None'.
                 Number of samples per gradient update.
                 If unspecified, 'batch_size' will default to 128.
             shuffle: Boolean (whether to shuffle the training data).
@@ -316,10 +321,15 @@ class SciModel(object):
         """ Predict output from network.
 
         # Arguments
-            xs:
-            batch_size:
-            verbose:
-            steps:
+            xs: list of `Xs` associated model.
+                Expecting a list of np.ndarray of size (N,1) each,
+                with N as the sample size.
+            batch_size: defaulted to None.
+                Check Keras documentation for more information.
+            verbose: defaulted to 0 (None).
+                Check Keras documentation for more information.
+            steps: defaulted to 0 (None).
+                Check Keras documentation for more information.
 
         # Returns
             List of numpy array of the size of network outputs.
@@ -331,7 +341,7 @@ class SciModel(object):
         if len(xs) != len(self._inputs):
             raise ValueError(
                 "Please provide consistent number of inputs as the model is defined: "
-                "Expected {} - provided {}".format(len(self._inputs), len(to_list(x)))
+                "Expected {} - provided {}".format(len(self._inputs), len(to_list(xs)))
             )
         # prepare X,Y data.
         for i, (x, xt) in enumerate(zip(xs, self._model.inputs)):
@@ -383,13 +393,15 @@ class SciModel(object):
 
         # Arguments
             method: String.
-                "mse" for `Mean Squared Error` or
-                "mae" for `Mean Absolute Error` or
-                "se" for `Squared Error` or
-                "ae" for `Absolute Error`.
+            - "mse" for `Mean Squared Error` or
+            - "mae" for `Mean Absolute Error` or
+            - "se" for `Squared Error` or
+            - "ae" for `Absolute Error`.
+
         # Returns
             Callable function that gets (y_true, y_pred) as the input and
                 returns the loss value as the output.
+
         # Raises
             ValueError if anything other than "mse" or "mae" is passed.
         """

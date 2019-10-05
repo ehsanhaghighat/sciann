@@ -12,13 +12,18 @@ class Neumann(Constraint):
     """ Dirichlet class to impose to the system.
 
     # Arguments
-        cond (Functional): The `Functional` object that Neumann condition
+        cond: Functional.
+            The `Functional` object that Neumann condition
             will be imposed on.
-        sol (np.ndarray): Expected output to set the `pde` to.
+        sol: np.ndarray.
+            Expected output to set the `pde` to.
             If not provided, will be set to `zero`.
-        mesh_ids (np.ndarray): A 1D numpy arrays consists of node-ids to impose the condition.
-        var (String): A layer name to differentiate `cond` with respect to.
-        name (String): A `str` for name of the pde.
+        mesh_ids: np.ndarray.
+            A 1D numpy arrays consists of node-ids to impose the condition.
+        var: String.
+            A layer name to differentiate `cond` with respect to.
+        name: String.
+            A `str` for name of the pde.
 
     # Returns
 

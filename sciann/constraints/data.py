@@ -12,12 +12,16 @@ class Data(Constraint):
     """ Data class to impose to the system.
 
     # Arguments
-        cond (Functional): The `Functional` object that Data condition
+        cond: Functional.
+            The `Functional` object that Data condition
             will be imposed on.
-        y_true (np.ndarray): Expected output to set the `pde` to.
+        y_true: np.ndarray.
+            Expected output to set the `pde` to.
             If not provided, will be set to `zero`.
-        x_true_ids (np.ndarray): A 1D numpy arrays consists of node-ids to impose the condition.
-        name (String): A `str` for name of the pde.
+        x_true_ids: np.ndarray.
+            A 1D numpy arrays consists of node-ids to impose the condition.
+        name: String.
+            A `str` for name of the pde.
 
     # Returns
 

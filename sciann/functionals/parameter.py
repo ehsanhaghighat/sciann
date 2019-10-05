@@ -20,13 +20,19 @@ class Parameter(Functional):
         Inherited from Dense layer.
 
     # Arguments
-        val (float): Initial value for the parameter.
-        min_max ([MIN, MAX]): A range to constrain the value of parameter.
+        val: float.
+            Initial value for the parameter.
+        min_max: [MIN, MAX].
+            A range to constrain the value of parameter.
             This constraint will overwrite non_neg constraint if both are chosen.
-        inputs (Variables): List of `Variable`s to the parameters.
-        name (str): A name for the Parameter layer.
-        non_neg (boolean): True (default) if only non-negative values are expected.
+        inputs: Variables.
+            List of `Variable`s to the parameters.
+        name: str.
+            A name for the Parameter layer.
+        non_neg: boolean.
+            True (default) if only non-negative values are expected.
         **kwargs: keras.layer.Dense accepted arguments.
+        
     """
 
     def __init__(self,

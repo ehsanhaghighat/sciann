@@ -18,10 +18,12 @@ class Functional(object):
     """ Configures the Functional object (Neural Network).
 
     # Arguments
-        fields (String or Field): [Sub-]Network outputs.
+        fields: String or Field.
+            [Sub-]Network outputs.
             It can be of type `String` - Associated fields will be created internally.
             It can be of type `Field` or `Functional`
-        variables (Variable): [Sub-]Network inputs.
+        variables: Variable.
+            [Sub-]Network inputs.
             It can be of type `Variable` or other Functional objects.
         hidden_layers: A list indicating neurons in the hidden layers.
             e.g. [10, 100, 20] is a for hidden layers with 10, 100, 20, respectively.
@@ -33,7 +35,8 @@ class Functional(object):
         dtype: data-type of the network parameters, can be
             ('float16', 'float32', 'float64').
             Note: Only network inputs should be set.
-        trainable (Boolean): False if network is not trainable, True otherwise.
+        trainable: Boolean.
+            False if network is not trainable, True otherwise.
             Default value is True.
 
     # Raises

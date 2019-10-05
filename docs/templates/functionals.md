@@ -1,4 +1,4 @@
-# Functionals
+# Intro
 
 A combination of neural network layers form a `Functional`. 
 

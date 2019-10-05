@@ -7,6 +7,7 @@ from __future__ import print_function
 
 
 from keras.layers import Lambda
+from keras.layers import Dot
 from keras.layers import Input
 from keras.models import Model
 
@@ -219,6 +220,34 @@ def rdiv(f, other):
 
     for l in lmbd:
         l.name = "rdiv/" + l.name.split("_")[-1]
+    # res.append_to_layers(lmbd)
+    res.outputs = _apply_operation(lmbd, res, other)
+    return res
+
+
+def dot(f, other):
+    """Dot product of two `Functional` objects.
+
+    # Arguments
+        f: Functional object.
+        other: A python number or a tensor or a functional object.
+
+    # Returns
+        A Functional.
+    """
+    validate_functional(f)
+
+    res = f.copy()
+    if is_functional(other):
+        res.append_to_inputs(other.inputs)
+        res.append_to_layers(other.layers)
+        lmbd = [k.layers.Dot(axes=-1) for X in f.outputs]
+    else:
+        lmbd = [Lambda(lambda x: x*other) for X in f.outputs]
+
+    for l in lmbd:
+        l.name = "dot/" + l.name.split("_")[-1]
+
     # res.append_to_layers(lmbd)
     res.outputs = _apply_operation(lmbd, res, other)
     return res
@@ -473,7 +502,7 @@ def gradients(ys, xs, order=1):
             tf.gradients(
                 ds, xs,
                 unconnected_gradients='zero',
-                colocate_gradients_with_ops=True,
+                # colocate_gradients_with_ops=True, TF: V1.14.0
             )
         )
     return ds

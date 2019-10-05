@@ -11,8 +11,7 @@ from .variable import Variable
 
 
 class RadialBasis(Functional):
-    """
-
+    """ Radial Basis functional class.
     """
     def __init__(self, vars, rb_vars, radii):
         vars = to_list(vars)

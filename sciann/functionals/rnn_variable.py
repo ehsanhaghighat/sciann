@@ -12,7 +12,8 @@ class RNNVariable(RNNFunctional):
     """ Configures the `LSTMVariable` object for the network's input.
 
     # Arguments
-        units (int): number of time units in an recurrent architecture.
+        units: Int.
+            number of time units in an recurrent architecture.
             A minimum of 2 is needed.
         name: String.
             Required as derivatives work only with layer names.

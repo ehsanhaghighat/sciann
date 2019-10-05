@@ -51,7 +51,10 @@ PAGES = [
             SciModel
         ],
         'methods': [
-            SciModel.solve
+            SciModel.train,
+            SciModel.solve,
+            SciModel.predict,
+            SciModel.loss_functions,
         ]
     },
     {

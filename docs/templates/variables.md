@@ -1,4 +1,4 @@
-# Variables
+# Intro
 
 `Variable` is a way to to define inputs to the network, very much similar to the `Input` class in `Keras`. However, since we need to perform differentiation and other operations on the network, we cannot just use `Input`. Instead, we need to define the inputs of the network through `Variable`. 
 

@@ -13,12 +13,17 @@ class Tie(Constraint):
         constraint: `cond1 - cond2 == sol`.
 
     # Arguments
-        cond1 (Functional): A `Functional` object to be tied to cond2.
-        cond2 (Functional): A 'Functional' object to be tied to cond1.
-        sol (np.ndarray): Expected output to set the `pde` to.
+        cond1: Functional.
+            A `Functional` object to be tied to cond2.
+        cond2: Functional.
+            A 'Functional' object to be tied to cond1.
+        sol: np.ndarray.
+            Expected output to set the `pde` to.
             If not provided, will be set to `zero`.
-        mesh_ids (np.ndarray): A 1D numpy arrays consists of node-ids to impose the condition.
-        name (String): A `str` for name of the pde.
+        mesh_ids: np.ndarray.
+            A 1D numpy arrays consists of node-ids to impose the condition.
+        name: String.
+            A `str` for name of the pde.
 
     # Returns
 

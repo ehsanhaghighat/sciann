@@ -12,11 +12,15 @@ class PDE(Constraint):
     """ PDE class to impose to the system.
 
     # Arguments
-        pde (Functional): The `Functional` object that pde if formed on.
-        sol (np.ndarray): Expected output to set the `pde` to.
+        pde: Functional.
+            The `Functional` object that pde if formed on.
+        sol: np.ndarray.
+            Expected output to set the `pde` to.
             If not provided, will be set to `zero`.
-        mesh_ids (np.ndarray): A 1D numpy arrays consists of node-ids to impose the condition.
-        name (String): A `str` for name of the pde.
+        mesh_ids: np.ndarray.
+            A 1D numpy arrays consists of node-ids to impose the condition.
+        name: String.
+            A `str` for name of the pde.
 
     # Returns
 
