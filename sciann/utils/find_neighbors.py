@@ -5,16 +5,17 @@ import numpy as np
 from sklearn.neighbors import BallTree
 
 
-def process_data_for_radial_basis(*args, **kwargs):
+def find_neighbors(*args, **kwargs):
     """ Find closest point to each node in xs.
 
     # Arguments
         xs: A list of input vectors of dimension (N,1) with N as number of data-points.
         ys: A list of output vectors of dimension (N,1) with N as number of data-points.
         size_rb: Number of closest points.
+        return_ids: Boolean.
 
     # Returns
-        xrb: A list of `Radial Basis` inputs of dimension (N,size_rb) with N as number of data-points.
+        xrb: A list of N-`neighbors` of dimension (N,size_rb).
     """
     if len(args)==2:
         xs = args[0]

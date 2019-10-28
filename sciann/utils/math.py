@@ -30,7 +30,14 @@ def pow(f, a):
     res = f.copy()
     lmbd = [Lambda(lambda x: x**a) for X in f.outputs]
     for l in lmbd:
-        l.name = "pow{:d}/".format(a) + l.name.split("_")[-1]
+        if isinstance(a, int):
+            l.name = "pow{:d}/".format(a) + l.name.split("_")[-1]
+        elif isinstance(a, float):
+            l.name = "pow{:.3f}/".format(a) + l.name.split("_")[-1]
+        else:
+            raise ValueError(
+                'Expected an `int` or `float` for a in x^a. '
+            )
     # res.append_to_layers(lmbd)
     res.outputs = _apply_operation(lmbd, res)
     return res
@@ -292,6 +299,18 @@ def sin(x):
     return _apply_function(x, 'sin')
 
 
+def asin(x):
+    """Computes asin of x element-wise.
+
+    # Arguments
+        x: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    return _apply_function(x, 'asin')
+
+
 def cos(x):
     """Computes cos of x element-wise.
 
@@ -302,6 +321,18 @@ def cos(x):
         A new functional object.
     """
     return _apply_function(x, 'cos')
+
+
+def acos(x):
+    """Computes acos of x element-wise.
+
+    # Arguments
+        x: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    return _apply_function(x, 'acos')
 
 
 def tan(x):
@@ -316,6 +347,18 @@ def tan(x):
     return _apply_function(x, 'tan')
 
 
+def atan(x):
+    """Computes atan of x element-wise.
+
+    # Arguments
+        x: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    return _apply_function(x, 'atan')
+
+
 def cot(x):
     """Computes cot of x element-wise.
 
@@ -326,6 +369,18 @@ def cot(x):
         A new functional object.
     """
     return _apply_function(x, 'cot')
+
+
+def acot(x):
+    """Computes acot of x element-wise.
+
+    # Arguments
+        x: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    return _apply_function(x, 'acot')
 
 
 def sinh(x):
@@ -457,6 +512,8 @@ def mean(x, **kwargs):
     # Returns
         A new functional object.
     """
+    if "axis" not in kwargs:
+        kwargs["axis"] = -1
     if "keepdims" not in kwargs:
         kwargs["keepdims"] = True
     return _apply_function(x, 'mean', **kwargs)

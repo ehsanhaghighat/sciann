@@ -39,6 +39,8 @@ from sciann import Field
 from sciann import SciModel
 from sciann import constraints
 from sciann import utils
+from sciann import Parameter
+
 
 EXCLUDE = {
     'Constraint'
@@ -62,7 +64,8 @@ PAGES = [
         'classes': [
             Functional,
             Variable,
-            Field
+            Field,
+            Parameter,
         ]
     },
     {
@@ -82,8 +85,6 @@ PAGES = [
         'classes': [
             constraints.Data,
             constraints.PDE,
-            constraints.Dirichlet,
-            constraints.Neumann,
             constraints.Tie
         ]
     },
@@ -95,8 +96,11 @@ PAGES = [
             utils.math.diff,
             utils.math.radial_basis,
             utils.math.sin,
+            utils.math.asin,
             utils.math.cos,
+            utils.math.acos,
             utils.math.tan,
+            utils.math.atan,
             utils.math.tanh,
             utils.math.exp,
             utils.math.pow,

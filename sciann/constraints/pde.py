@@ -14,11 +14,6 @@ class PDE(Constraint):
     # Arguments
         pde: Functional.
             The `Functional` object that pde if formed on.
-        sol: np.ndarray.
-            Expected output to set the `pde` to.
-            If not provided, will be set to `zero`.
-        mesh_ids: np.ndarray.
-            A 1D numpy arrays consists of node-ids to impose the condition.
         name: String.
             A `str` for name of the pde.
 
@@ -26,39 +21,23 @@ class PDE(Constraint):
 
     # Raises
         ValueError: 'pde' should be a functional object.
-                    'mesh' should be a list of numpy arrays.
     """
-    def __init__(self, pde, sol=None, mesh_ids=None, name="pde"):
+    def __init__(self, pde, name="pde", **kwargs):
         if not is_functional(pde):
             raise ValueError(
                 "Expected a Functional object as the pde, received a "
                 "{} - {}".format(type(pde), pde)
             )
-        # prepare mesh.
-        if mesh_ids is not None:
-            if not all([isinstance(mesh_ids, np.ndarray), mesh_ids.ndim==1]):
-                raise ValueError(
-                    "Expected a 1d numpy arrays of mesh ids, received a "
-                    "{} - {}".format(type(mesh_ids), mesh_ids)
-                )
-        # prepare expected output.
-        if sol is not None:
-            sol = to_list(sol)
-            if not all([isinstance(x, np.ndarray) for x in sol]):
-                raise ValueError(
-                    "Expected a list of numpy arrays for `sol`, received a "
-                    "{} - {}".format(type(sol), sol)
-                )
-            if len(sol) != len(pde.outputs):
-                raise ValueError(
-                    "Number of expected outputs in `sol` does not match "
-                    "number of outputs from the constraint. \n "
-                    "Provided {} \nExpected {} ".format(sol, pde.outputs)
-                )
-
+        # Check inputs.
+        if 'mesh_ids' in kwargs or 'sol' in kwargs:
+            raise ValueError(
+                'Legacy interface: please use `SciModel` and `SciModel.train` to impose on specific ids. '
+            )
+        elif len(kwargs)>0:
+            raise ValueError(
+                'Unrecognized input variable: {}'.format(kwargs.keys())
+            )
         super(PDE, self).__init__(
             cond=pde,
-            ids=mesh_ids,
-            sol=sol,
             name=name
         )

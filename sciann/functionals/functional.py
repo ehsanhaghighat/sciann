@@ -27,9 +27,11 @@ class Functional(object):
             It can be of type `Variable` or other Functional objects.
         hidden_layers: A list indicating neurons in the hidden layers.
             e.g. [10, 100, 20] is a for hidden layers with 10, 100, 20, respectively.
-        activation: Activation function for the hidden layers.
+        activation: defaulted to "tanh".
+            Activation function for the hidden layers.
             Last layer will have a linear output.
-        enrichment: Activation function to be applied to the network output.
+        enrichment: defaulted to "linear".
+            Activation function to be applied to the network output.
         kernel_initializer: Initializer of the `Kernel`, from `k.initializers`.
         bias_initializer: Initializer of the `Bias`, from `k.initializers`.
         dtype: data-type of the network parameters, can be
@@ -47,7 +49,7 @@ class Functional(object):
                  fields=None,
                  variables=None,
                  hidden_layers=None,
-                 activation="linear",
+                 activation="tanh",
                  enrichment="linear",
                  kernel_initializer=default_kernel_initializer(),
                  bias_initializer=default_bias_initializer(),
@@ -139,13 +141,13 @@ class Functional(object):
                 layers.append(layer)
                 net[-1] = layer(net[-1])
                 # Apply the activation.
-                if nLay<len(hidden_layers)-1 and afunc.__name__ != 'linear':
+                if afunc.__name__ != 'linear': #nLay<len(hidden_layers)-1 and
                     layer = Activation(afunc)
                     layer.name = "{}_".format(afunc.__name__) + layer.name.split("_")[-1]
                     layers.append(layer)
                     net[-1] = layer(net[-1])
 
-            # add the activations.
+            # add the enrichment (activation on the output).
             if enrich.__name__ != 'linear':
                 layer = Activation(enrich)
                 layer.name = "{}_".format(enrich.__name__) + layer.name.split("_")[-1]
@@ -174,9 +176,32 @@ class Functional(object):
     def eval(self, model, mesh):
         assert validations.is_scimodel(model), \
             'Expected a SciModel object. '
-        return unpack_singleton(
-            K.function(model.model.inputs, self._outputs)(mesh)
-        )
+        # To have unified output for postprocessing - limitted support.
+        shape_default = mesh[0].shape if all([x.shape==mesh[0].shape for x in mesh]) else None
+        # prepare X,Y data.
+        x_pred = to_list(mesh)
+        for i, (x, xt) in enumerate(zip(x_pred, model._model.input)):
+            x_shape = tuple(xt.get_shape().as_list())
+            if x.shape != x_shape:
+                try:
+                    x_pred[i] = x.reshape((-1,) + x_shape[1:])
+                except:
+                    print(
+                        'Could not automatically convert the inputs to be ' 
+                        'of the same size as the expected input tensors. ' 
+                        'Please provide inputs of the same dimension as the `Variables`. '
+                    )
+                    assert False
+
+        y_pred = to_list(K.function(model.model.inputs, self._outputs)(x_pred))
+
+        if shape_default is not None:
+            try:
+                y_pred = [y.reshape(shape_default) for y in y_pred]
+            except:
+                print("Input and output dimensions need re-adjustment for post-processing.")
+
+        return unpack_singleton(y_pred)
 
     @property
     def layers(self):

@@ -63,9 +63,7 @@ sciann/__init__.py
 sciann/constraints/__init__.py
 sciann/constraints/constraint.py
 sciann/constraints/data.py
-sciann/constraints/dirichlet.py
 sciann/constraints/minmax.py
-sciann/constraints/neumann.py
 sciann/constraints/pde.py
 sciann/constraints/tie.py
 sciann/engine~/__init__.py
@@ -83,8 +81,8 @@ sciann/functionals/variable.py
 sciann/models/__init__.py
 sciann/models/model.py
 sciann/utils/__init__.py
+sciann/utils/find_neighbors.py
 sciann/utils/math.py
-sciann/utils/process_data_for_radial_basis.py
 sciann/utils/utilities.py
 sciann/utils/validations.py
 tests/test_api.py

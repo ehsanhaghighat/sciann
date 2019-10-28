@@ -238,10 +238,13 @@ class SciModel(object):
         else:
             if len(weights.shape)!=1 or \
                     weights.shape[0] != num_sample:
-                raise ValueError(
-                    'Input error: `weights` should have dimension 1 with '
-                    'the same sample length as `Xs. '
-                )
+                try:
+                    weights = weights.reshape(num_sample)
+                except:
+                    raise ValueError(
+                        'Input error: `weights` should have dimension 1 with '
+                        'the same sample length as `Xs. '
+                    )
 
         y_true = to_list(y_true)
         assert len(y_true)==len(self._constraints), \
