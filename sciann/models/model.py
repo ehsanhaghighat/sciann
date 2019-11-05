@@ -346,6 +346,8 @@ class SciModel(object):
                 "Please provide consistent number of inputs as the model is defined: "
                 "Expected {} - provided {}".format(len(self._inputs), len(to_list(xs)))
             )
+        # To have unified output for postprocessing - limitted support.
+        shape_default = xs[0].shape if all([x.shape==xs[0].shape for x in xs]) else None
         # prepare X,Y data.
         for i, (x, xt) in enumerate(zip(xs, self._model.inputs)):
             x_shape = tuple(xt.get_shape().as_list())
@@ -360,7 +362,15 @@ class SciModel(object):
                     )
                     assert False
 
-        return self._model.predict(xs, batch_size, verbose, steps)
+        y_pred = self._model.predict(xs, batch_size, verbose, steps)
+
+        if shape_default is not None:
+            try:
+                y_pred = [y.reshape(shape_default) for y in y_pred]
+            except:
+                print("Input and output dimensions need re-adjustment for post-processing.")
+
+        return unpack_singleton(y_pred)
 
     def eval(self, *args):
         if len(args) == 1:

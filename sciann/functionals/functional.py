@@ -176,11 +176,11 @@ class Functional(object):
     def eval(self, model, mesh):
         assert validations.is_scimodel(model), \
             'Expected a SciModel object. '
-        # To have unified output for postprocessing - limitted support.
-        shape_default = mesh[0].shape if all([x.shape==mesh[0].shape for x in mesh]) else None
-        # prepare X,Y data.
         x_pred = to_list(mesh)
-        for i, (x, xt) in enumerate(zip(x_pred, model._model.input)):
+        # To have unified output for postprocessing - limitted support.
+        shape_default = x_pred[0].shape if all([x.shape==x_pred[0].shape for x in x_pred]) else None
+        # prepare X,Y data.
+        for i, (x, xt) in enumerate(zip(x_pred, model._model.inputs)):
             x_shape = tuple(xt.get_shape().as_list())
             if x.shape != x_shape:
                 try:
@@ -193,7 +193,7 @@ class Functional(object):
                     )
                     assert False
 
-        y_pred = to_list(K.function(model.model.inputs, self._outputs)(x_pred))
+        y_pred = to_list(K.function(model._model.inputs, self._outputs)(x_pred))
 
         if shape_default is not None:
             try:

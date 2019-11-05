@@ -13,7 +13,6 @@ from keras.layers import InputSpec
 
 from .functional import Functional
 from .variable import Variable
-from ..constraints import MinMax
 
 
 class Parameter(Functional):
