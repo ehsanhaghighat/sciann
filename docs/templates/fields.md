@@ -7,7 +7,7 @@ It is not necessary to be defined explicitly, however, if you are expecting mult
 ```python
 from sciann import Field
 
-Fx = Field(10, name='Fx')
+Fx = Field(name='Fx', units=10)
 ```
 
 ---

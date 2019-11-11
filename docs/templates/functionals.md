@@ -2,7 +2,7 @@
 
 A combination of neural network layers form a `Functional`. 
 
-Mathematically, a `functional` is a general mapping from space \\(X\\) into some output space \\(Y\\). Once the parameters of this transformation are found, this mapping is called a `function`. 
+Mathematically, a `functional` is a general mapping from input set \\(X\\) onto some output set \\(Y\\). Once the parameters of this transformation are found, this mapping is called a `function`. 
 
 `Functional`s are needed to form `SciModels`. 
 

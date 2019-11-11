@@ -22,6 +22,7 @@ docs_dir: sources
 site_dir: ../../SciANN_site
 repo_url: https://github.com/sciann/sciann
 site_url: https://www.sciann.com/
+edit_uri: edit/master/docs/sources/
 site_description: 'Documentation for SciANN.'
 google_analytics: ['UA-149481893-1', 'www.sciann.com']
 
