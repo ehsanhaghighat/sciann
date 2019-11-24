@@ -80,7 +80,7 @@ __Raises__
 
 
 ```python
-train(x_true, y_true, weights=None, target_weights=None, epochs=10, batch_size=256, shuffle=True, callbacks=None, stop_after=100, default_zero_weight=1e-10)
+train(x_true, y_true, weights=None, target_weights=None, batch_size=64, epochs=100, learning_rate=0.001, shuffle=True, callbacks=None, stop_after=10, default_zero_weight=1e-10)
 ```
 
 
@@ -98,17 +98,24 @@ __Arguments__
     Expecting an array of shape (N,1), with N as the sample size.
     Default value is `one` to consider all samples equally important.
 - __target_weights__: (list) A weight for each target defined in `y_true`.
-- __epochs__: (Integer) Number of epochs to train the model.
-    An epoch is an iteration over the entire `x` and `y`
-    data provided.
 - __batch_size__: (Integer) or 'None'.
     Number of samples per gradient update.
-    If unspecified, 'batch_size' will default to 128.
+    If unspecified, 'batch_size' will default to 2^6=64.
+- __epochs__: (Integer) Number of epochs to train the model.
+    Defaulted to 100.
+    An epoch is an iteration over the entire `x` and `y`
+    data provided.
+- __learning_rate__: (Tuple/List) (epochs, lrs).
+    Expects a list/tuple with a list of epochs and a list or learning rates.
+    It linearly interpolates between entries.
+    Defaulted to 0.001 with no decay.
+    Example:
+        learning_rate = ([0, 100, 1000], [0.001, 0.0005, 0.00001])
 - __shuffle__: Boolean (whether to shuffle the training data).
     Default value is True.
 - __callbacks__: List of `keras.callbacks.Callback` instances.
 - __stop_after__: To stop after certain missed epochs.
-    Defaulted to 100.
+    Defaulted to 10.
 - __default_zero_weight__: a small number for zero sample-weight.
 
 __Returns__

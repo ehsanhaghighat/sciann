@@ -170,11 +170,12 @@ class SciModel(object):
               y_true,
               weights=None,
               target_weights=None,
-              epochs=10,
-              batch_size=2**8,
+              batch_size=2**6,
+              epochs=100,
+              learning_rate=0.001,
               shuffle=True,
               callbacks=None,
-              stop_after=100,
+              stop_after=10,
               default_zero_weight=1.0e-10,
               **kwargs,):
         """Performs the training on the model.
@@ -190,24 +191,50 @@ class SciModel(object):
                 Expecting an array of shape (N,1), with N as the sample size.
                 Default value is `one` to consider all samples equally important.
             target_weights: (list) A weight for each target defined in `y_true`.
-            epochs: (Integer) Number of epochs to train the model.
-                An epoch is an iteration over the entire `x` and `y`
-                data provided.
             batch_size: (Integer) or 'None'.
                 Number of samples per gradient update.
-                If unspecified, 'batch_size' will default to 128.
+                If unspecified, 'batch_size' will default to 2^6=64.
+            epochs: (Integer) Number of epochs to train the model.
+                Defaulted to 100.
+                An epoch is an iteration over the entire `x` and `y`
+                data provided.
+            learning_rate: (Tuple/List) (epochs, lrs).
+                Expects a list/tuple with a list of epochs and a list or learning rates.
+                It linearly interpolates between entries.
+                Defaulted to 0.001 with no decay.
+                Example:
+                    learning_rate = ([0, 100, 1000], [0.001, 0.0005, 0.00001])
             shuffle: Boolean (whether to shuffle the training data).
                 Default value is True.
             callbacks: List of `keras.callbacks.Callback` instances.
             stop_after: To stop after certain missed epochs.
-                Defaulted to 100.
+                Defaulted to 10.
             default_zero_weight: a small number for zero sample-weight.
 
         # Returns
             A Keras 'History' object after performing fitting.
         """
         if callbacks is None:
+            # default_lr = learning_rate/0.9900
+            # f0 = np.log(1.0/0.9900 - 1.0)
+            # f1 = np.log(1.0/decay_max - 1.0)
+            # decay_epochs = epochs if decay_epochs is None else decay_epochs
+            # a0 = decay_epochs / (f1-f0)
+            # n0 = -a0*f0
+            if isinstance(learning_rate, (float, int)):
+                lr_epochs = [0, epochs]
+                lr_rates = [learning_rate, learning_rate]
+            elif isinstance(learning_rate, (tuple, list)):
+                lr_epochs = learning_rate[0]
+                lr_rates = learning_rate[1]
+            else:
+                raise ValueError(
+                    "learning rate: expecting a `float` or a tuple/list of two arrays"
+                    " with `epochs` and `learning rates`"
+                )
             callbacks = [
+                # k.callbacks.LearningRateScheduler(lambda n: default_lr/(1.0 + np.exp((n-n0)/a0))),
+                k.callbacks.LearningRateScheduler(lambda n: np.interp(n, lr_epochs, lr_rates)),
                 k.callbacks.EarlyStopping(
                     monitor="loss", mode="min", verbose=1, patience=stop_after
                 ),
