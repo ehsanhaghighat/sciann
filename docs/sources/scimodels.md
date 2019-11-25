@@ -30,11 +30,11 @@ Check Keras' documentation for more details.
 
 ---
 
-<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/models/model.py#L18)</span>
+<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/models/model.py#L20)</span>
 ### SciModel
 
 ```python
-sciann.models.model.SciModel(inputs=None, targets=None, loss_func='mse', optimizer='adam', plot_to_file=None)
+sciann.models.model.SciModel(inputs=None, targets=None, loss_func='mse', optimizer='adam', load_weights_from=None, plot_to_file=None)
 ```
 
 Configures the model for training.
@@ -67,6 +67,7 @@ __Arguments__
 
     Check our Keras documentation for further details. We have found
 
+- __load_weights_from__: (file_path) Instantiate state of the model from a previously saved state.
 - __plot_to_file__: A string file name to output the network architecture.
 
 __Raises__
@@ -80,7 +81,7 @@ __Raises__
 
 
 ```python
-train(x_true, y_true, weights=None, target_weights=None, batch_size=64, epochs=100, learning_rate=0.001, shuffle=True, callbacks=None, stop_after=10, default_zero_weight=1e-10)
+train(x_true, y_true, weights=None, target_weights=None, batch_size=64, epochs=100, learning_rate=0.001, shuffle=True, callbacks=None, stop_after=10, save_weights_to=None, default_zero_weight=1e-10)
 ```
 
 
@@ -116,6 +117,7 @@ __Arguments__
 - __callbacks__: List of `keras.callbacks.Callback` instances.
 - __stop_after__: To stop after certain missed epochs.
     Defaulted to 10.
+- __save_weights_to__: (file_path) If you want to save the state of the model (at the end of the training).
 - __default_zero_weight__: a small number for zero sample-weight.
 
 __Returns__

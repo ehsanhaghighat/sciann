@@ -5,6 +5,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
+
 from ..utils import *
 
 from keras.models import Model
@@ -43,6 +45,7 @@ class SciModel(object):
             - `optimizer = k.optimizers.SGD(lr=0.001, momentum=0.0, decay=0.0, nesterov=False)`
             - `optimizer = k.optimizers.Adam(lr=0.01, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)`
             Check our Keras documentation for further details. We have found
+        load_weights_from: (file_path) Instantiate state of the model from a previously saved state.
         plot_to_file: A string file name to output the network architecture.
 
     # Raises
@@ -54,6 +57,7 @@ class SciModel(object):
                  targets=None,
                  loss_func="mse",
                  optimizer="adam",
+                 load_weights_from=None,
                  plot_to_file=None,
                  **kwargs):
         # strictly check for inputs to be of type variable.
@@ -119,6 +123,12 @@ class SciModel(object):
             loss=loss_func,
             optimizer=optimizer,
         )
+        # set initial state of the model.
+        if load_weights_from is not None:
+            if os.path.exists(load_weights_from): 
+                model.load_weights(load_weights_from)
+            else:
+                raise Warning("File not found - load_weights_from: {}".format(load_weights_from))
         # Set the variables.
         self._model = model
         self._inputs = inputs
@@ -162,6 +172,12 @@ class SciModel(object):
     def save(self, filepath, *args, **kwargs):
         return self._model.save(filepath, *args, **kwargs)
 
+    def save_weights(self, filepath, *args, **kwargs):
+        return self._model.save_weights(filepath, *args, **kwargs)
+
+    def load_weights(self, filepath, *args, **kwargs):
+        return self._model.load_weights(filepath, *args, **kwargs)
+
     def summary(self, *args, **kwargs):
         return self._model.summary(*args, **kwargs)
 
@@ -176,6 +192,7 @@ class SciModel(object):
               shuffle=True,
               callbacks=None,
               stop_after=10,
+              save_weights_to=None,
               default_zero_weight=1.0e-10,
               **kwargs,):
         """Performs the training on the model.
@@ -209,6 +226,7 @@ class SciModel(object):
             callbacks: List of `keras.callbacks.Callback` instances.
             stop_after: To stop after certain missed epochs.
                 Defaulted to 10.
+            save_weights_to: (file_path) If you want to save the state of the model (at the end of the training).
             default_zero_weight: a small number for zero sample-weight.
 
         # Returns
@@ -234,9 +252,14 @@ class SciModel(object):
                 )
             callbacks = [
                 # k.callbacks.LearningRateScheduler(lambda n: default_lr/(1.0 + np.exp((n-n0)/a0))),
-                k.callbacks.LearningRateScheduler(lambda n: np.interp(n, lr_epochs, lr_rates)),
+                k.callbacks.LearningRateScheduler(
+                    lambda n: np.interp(n, lr_epochs, lr_rates)
+                ),
+                k.callbacks.callbacks.ReduceLROnPlateau(
+                    monitor='loss', factor=0.5, patience=10, verbose=1, mode='auto', min_delta=0.0001, min_lr=1e-12
+                ),
                 k.callbacks.EarlyStopping(
-                    monitor="loss", mode="min", verbose=1, patience=stop_after
+                    monitor="loss", mode='auto', verbose=1, patience=stop_after
                 ),
                 k.callbacks.TerminateOnNaN(),
             ]
@@ -311,6 +334,13 @@ class SciModel(object):
             callbacks=callbacks,
             **kwargs,
         )
+        # save model.
+        if save_weights_to is not None:
+            try:
+                self._model.save_weights(save_weights_to)
+            except:
+                print("\nWARNING: Failed to save model.weights to the provided path: {}\n".format(save_weights_to))
+        # return the history.
         return history
 
     def solve(self,
