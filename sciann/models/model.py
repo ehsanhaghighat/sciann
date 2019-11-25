@@ -255,14 +255,17 @@ class SciModel(object):
                 k.callbacks.LearningRateScheduler(
                     lambda n: np.interp(n, lr_epochs, lr_rates)
                 ),
-                k.callbacks.callbacks.ReduceLROnPlateau(
-                    monitor='loss', factor=0.5, patience=10, verbose=1, mode='auto', min_delta=0.0001, min_lr=1e-12
-                ),
                 k.callbacks.EarlyStopping(
                     monitor="loss", mode='auto', verbose=1, patience=stop_after
                 ),
                 k.callbacks.TerminateOnNaN(),
             ]
+            if isinstance(learning_rate, (type(None), float, int)):
+                callbacks.append(
+                    k.callbacks.callbacks.ReduceLROnPlateau(
+                        monitor='loss', factor=0.5, patience=10, verbose=1, mode='auto', min_delta=0.0001, min_lr=1e-12
+                    )
+                )
         # prepare X,Y data.
         x_true = to_list(x_true)
         for i, (x, xt) in enumerate(zip(x_true, self._model.inputs)):
@@ -323,7 +326,19 @@ class SciModel(object):
             else:
                 for i, cw in enumerate(target_weights):
                     sample_weights[i] *= cw
-
+        # save model.
+        modelfilepath = None
+        if save_weights_to is not None:
+            try:
+                self._model.save_weights("{}-start.hdf5".format(save_weights_to))
+                modelfilepath = save_weights_to + "-{epoch:05d}-{loss:.3e}.hdf5"
+                model_check_point = k.callbacks.callbacks.ModelCheckpoint(
+                    modelfilepath, monitor='loss', save_weights_only=True, mode='auto', period=int(epochs/10)
+                )
+            except:
+                print("\nWARNING: Failed to save model.weights to the provided path: {}\n".format(save_weights_to))
+        if modelfilepath is not None:
+            callbacks.append(model_check_point)
         # perform the training.
         history = self._model.fit(
             x_true, y_star,
@@ -334,10 +349,9 @@ class SciModel(object):
             callbacks=callbacks,
             **kwargs,
         )
-        # save model.
         if save_weights_to is not None:
             try:
-                self._model.save_weights(save_weights_to)
+                self._model.save_weights("{}-end.hdf5".format(save_weights_to))
             except:
                 print("\nWARNING: Failed to save model.weights to the provided path: {}\n".format(save_weights_to))
         # return the history.

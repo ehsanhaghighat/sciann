@@ -58,6 +58,7 @@ docs/theme/css/theme_extra.css
 docs/theme/js/jquery-2.1.1.min.js
 docs/theme/js/modernizr-2.8.3.min.js
 docs/theme/js/theme.js
+examples/.DS_Store
 examples/example-fitting-1d-lstm.py
 examples/example-fitting-1d.py
 examples/__pycache__/example_fitting_1d.cpython-36.pyc
