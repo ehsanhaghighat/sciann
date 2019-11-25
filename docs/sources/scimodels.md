@@ -81,7 +81,7 @@ __Raises__
 
 
 ```python
-train(x_true, y_true, weights=None, target_weights=None, batch_size=64, epochs=100, learning_rate=0.001, shuffle=True, callbacks=None, stop_after=10, save_weights_to=None, default_zero_weight=1e-10)
+train(x_true, y_true, weights=None, target_weights=None, batch_size=64, epochs=100, learning_rate=0.001, shuffle=True, callbacks=None, stop_after=10, save_weights_to=None, save_weights_freq=0, default_zero_weight=1e-10)
 ```
 
 
@@ -118,6 +118,8 @@ __Arguments__
 - __stop_after__: To stop after certain missed epochs.
     Defaulted to 10.
 - __save_weights_to__: (file_path) If you want to save the state of the model (at the end of the training).
+- __save_weights_freq__: (Integer) Save weights every N epcohs.
+    Defaulted to 0.
 - __default_zero_weight__: a small number for zero sample-weight.
 
 __Returns__

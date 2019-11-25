@@ -193,6 +193,7 @@ class SciModel(object):
               callbacks=None,
               stop_after=10,
               save_weights_to=None,
+              save_weights_freq=0,
               default_zero_weight=1.0e-10,
               **kwargs,):
         """Performs the training on the model.
@@ -227,6 +228,8 @@ class SciModel(object):
             stop_after: To stop after certain missed epochs.
                 Defaulted to 10.
             save_weights_to: (file_path) If you want to save the state of the model (at the end of the training).
+            save_weights_freq: (Integer) Save weights every N epcohs.
+                Defaulted to 0.
             default_zero_weight: a small number for zero sample-weight.
 
         # Returns
@@ -327,17 +330,18 @@ class SciModel(object):
                 for i, cw in enumerate(target_weights):
                     sample_weights[i] *= cw
         # save model.
-        modelfilepath = None
+        model_file_path = None
         if save_weights_to is not None:
             try:
                 self._model.save_weights("{}-start.hdf5".format(save_weights_to))
-                modelfilepath = save_weights_to + "-{epoch:05d}-{loss:.3e}.hdf5"
-                model_check_point = k.callbacks.callbacks.ModelCheckpoint(
-                    modelfilepath, monitor='loss', save_weights_only=True, mode='auto', period=int(epochs/10)
-                )
+                if save_weights_freq>0:
+                    model_file_path = save_weights_to + "-{epoch:05d}-{loss:.3e}.hdf5"
+                    model_check_point = k.callbacks.callbacks.ModelCheckpoint(
+                        model_file_path, monitor='loss', save_weights_only=True, mode='auto', period=save_weights_freq
+                    )
             except:
                 print("\nWARNING: Failed to save model.weights to the provided path: {}\n".format(save_weights_to))
-        if modelfilepath is not None:
+        if model_file_path is not None:
             callbacks.append(model_check_point)
         # perform the training.
         history = self._model.fit(

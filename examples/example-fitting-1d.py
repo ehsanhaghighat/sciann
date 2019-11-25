@@ -35,7 +35,11 @@ c1 = Data(y)
 model = SciModel(x, c1)
 
 # Training: .train runs the optimization and finds the parameters.
-model.train(x_true, y_true, batch_size=32, epochs=100, save_weights_to='example-fitting-1d')
+model.train(x_true, y_true,
+            batch_size=32,
+            epochs=100,
+            save_weights_to='example-fitting-1d',
+            save_weights_freq=10)
 
 # used to evaluate the model after the training.
 y_pred = model.predict(x_true)
