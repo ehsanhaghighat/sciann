@@ -6,7 +6,7 @@ You can set up a `SciModel` as simple as the code bellow:
 
 ```python
 from sciann import Variable, Functional, SciModel
-from sciann.conditions import Data
+from sciann.constraints import Data
 
 x = Variable("x")
 y = Functional("y", x)

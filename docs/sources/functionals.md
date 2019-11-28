@@ -23,7 +23,7 @@ Fxy = Functional('Fxy', [x, y],
 `Functionals` can be plotted when a `SciModel` is formed. A minimum of one `Constraint` is needed to form the SciModel
 
 ```python
-from sciann.conditions import Data
+from sciann.constraints import Data
 from sciann import SciModel
 
 model = SciModel(x, Data(Fxy), 
@@ -36,7 +36,7 @@ model = SciModel(x, Data(Fxy),
 ### Functional
 
 ```python
-sciann.functionals.functional.Functional(fields=None, variables=None, hidden_layers=None, activation='tanh', enrichment='linear', kernel_initializer=<keras.initializers.VarianceScaling object at 0x131d0bf60>, bias_initializer=<keras.initializers.RandomUniform object at 0x131d0d048>, dtype=None, trainable=True)
+sciann.functionals.functional.Functional(fields=None, variables=None, hidden_layers=None, activation='tanh', enrichment='linear', kernel_initializer=<keras.initializers.VarianceScaling object at 0x13325ef60>, bias_initializer=<keras.initializers.RandomUniform object at 0x133260048>, dtype=None, trainable=True)
 ```
 
 Configures the Functional object (Neural Network).
@@ -103,7 +103,7 @@ __Raises__
 ### Field
 
 ```python
-sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x12ffaff28>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x131cf9898>, bias_initializer=<keras.initializers.RandomUniform object at 0x131cf9c18>, trainable=True, dtype=None)
+sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x131502f28>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x13324c898>, bias_initializer=<keras.initializers.RandomUniform object at 0x13324cc18>, trainable=True, dtype=None)
 ```
 
 Configures the `Field` class for the model outputs.

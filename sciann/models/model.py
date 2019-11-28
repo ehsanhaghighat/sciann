@@ -242,33 +242,31 @@ class SciModel(object):
             # decay_epochs = epochs if decay_epochs is None else decay_epochs
             # a0 = decay_epochs / (f1-f0)
             # n0 = -a0*f0
-            if isinstance(learning_rate, (float, int)):
-                lr_epochs = [0, epochs]
-                lr_rates = [learning_rate, learning_rate]
+            callbacks = []
+            if isinstance(learning_rate, (type(None), float, int)):
+                lr_rates = 0.001 if learning_rate is None else learning_rate
+                K.set_value(self.model.optimizer.lr, lr_rates)
+                callbacks.append(
+                    k.callbacks.callbacks.ReduceLROnPlateau(
+                        monitor='loss', factor=0.5, patience=10, cooldown=10, verbose=1, mode='auto', min_delta=0.0001, min_lr=1e-12
+                    )
+                )
             elif isinstance(learning_rate, (tuple, list)):
                 lr_epochs = learning_rate[0]
                 lr_rates = learning_rate[1]
+                callbacks.append(
+                    # k.callbacks.LearningRateScheduler(lambda n: default_lr/(1.0 + np.exp((n-n0)/a0))),
+                    k.callbacks.LearningRateScheduler(lambda n: np.interp(n, lr_epochs, lr_rates))
+                )
             else:
                 raise ValueError(
                     "learning rate: expecting a `float` or a tuple/list of two arrays"
                     " with `epochs` and `learning rates`"
                 )
-            callbacks = [
-                # k.callbacks.LearningRateScheduler(lambda n: default_lr/(1.0 + np.exp((n-n0)/a0))),
-                k.callbacks.LearningRateScheduler(
-                    lambda n: np.interp(n, lr_epochs, lr_rates)
-                ),
-                k.callbacks.EarlyStopping(
-                    monitor="loss", mode='auto', verbose=1, patience=stop_after
-                ),
+            callbacks += [
+                k.callbacks.EarlyStopping(monitor="loss", mode='auto', verbose=1, patience=stop_after),
                 k.callbacks.TerminateOnNaN(),
             ]
-            if isinstance(learning_rate, (type(None), float, int)):
-                callbacks.append(
-                    k.callbacks.callbacks.ReduceLROnPlateau(
-                        monitor='loss', factor=0.5, patience=10, verbose=1, mode='auto', min_delta=0.0001, min_lr=1e-12
-                    )
-                )
         # prepare X,Y data.
         x_true = to_list(x_true)
         for i, (x, xt) in enumerate(zip(x_true, self._model.inputs)):

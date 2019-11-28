@@ -23,7 +23,7 @@ Fxy = Functional('Fxy', [x, y],
 `Functionals` can be plotted when a `SciModel` is formed. A minimum of one `Constraint` is needed to form the SciModel
 
 ```python
-from sciann.conditions import Data
+from sciann.constraints import Data
 from sciann import SciModel
 
 model = SciModel(x, Data(Fxy), 

@@ -6,8 +6,9 @@ To use Functional, you can follow the exmaple bellow:
 
 ```python
 import numpy as np
-from sciann Variable, Functional, SciModel
-from sciann.conditions Data
+from sciann import Variable, Functional, SciModel
+from sciann.constraints import Data
+from sciann.utils import sin, cos, sinh
 
 # Synthetic data to be fitted. 
 x_true = np.linspace(0.0, 2*np.pi, 10000)
@@ -26,12 +27,17 @@ y = Functional(
 )
 
 # Define the SciModel. 
-model = SciModel(x, Data(y, y_true))
+model = SciModel(x, Data(y))
 
 # Solve the neural network model.
-model.solve(x_true, epochs=32, batches=10)
+model.solve(x_true, y_true, epochs=32, batches=10)
 
 # Find model's prediciton. 
-x_pred = model.predict(x_true)
+y_pred = model.predict(x_true)
 ```
 
+Alternatively, you can also evaluate each individual variable after training: 
+
+```python
+y_pred = y.eval(model, x_true)
+``` 

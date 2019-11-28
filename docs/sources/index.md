@@ -1,6 +1,6 @@
-# SciANN: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks
+# SciANN: Neural Networks for Scientific Computations 
 
-## You have just found SciANN.
+## New to SciANN? 
 
 SciANN is a high-level artificial neural networks API, written in Python using [Keras](https://keras.io) and [TensorFlow](https://www.tensorflow.org) backends. It is developed with a focus on enabling fast experimentation with different networks architectures and with emphasis on scientific computations, physics informed deep learing, and inversion. *Being able to start deep-learning in a very few lines of code is key to doing good research.*
 
@@ -49,7 +49,7 @@ x = Variable('x')
 y = Functional('y')
  
 # y_true is a Numpy array of (N,1) -- with N as number of samples.  
-model = SciModel(x, Data(y, y_true))
+model = SciModel(x, Data(y))
 ```
 
 This is associated to the simplest neural network possible, i.e. a linear relation between the input variable `x` and the output variable `y` with only two parameters to be learned.
@@ -57,13 +57,13 @@ This is associated to the simplest neural network possible, i.e. a linear relati
 Plotting a network is as easy as passing a file_name to the SciModel:
 
 ```python
-model = SciModel(x, Data(y, y_true), plot_to_file='file_path')
+model = SciModel(x, Data(y), plot_to_file='file_path')
 ```
 Once your model looks good, perform the learning with `.solve()`:
 
 ```python
 # x_true is a Numpy array of (N,1) -- with N as number of samples. 
-model.solve(x_true, epochs=5, batch_size=32)
+model.train(x_true, y_true, epochs=5, batch_size=32)
 ```
 
 You can iterate on your training data in batches and in multiple epochs. Please check [Keras](https://keras.io) documentation on `model.fit` for more information on possible options. 
