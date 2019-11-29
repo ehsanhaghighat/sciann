@@ -195,7 +195,7 @@ class SciModel(object):
               save_weights_to=None,
               save_weights_freq=0,
               default_zero_weight=1.0e-10,
-              **kwargs,):
+              **kwargs):
         """Performs the training on the model.
 
         # Arguments
@@ -370,7 +370,7 @@ class SciModel(object):
               callbacks=None,
               stop_after=100,
               default_zero_weight=1.0e-10,
-              **kwargs,):
+              **kwargs):
         """ This is a legacy method - please use `train` instead of `solve`.
         """
         print('\n'

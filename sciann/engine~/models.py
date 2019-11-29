@@ -154,7 +154,7 @@ class SciModel(object):
               callbacks=None,
               stop_after=100,
               default_zero_weight=1.0e-10,
-              **kwargs,):
+              **kwargs):
         """Performs the training on the model.
 
         # Arguments

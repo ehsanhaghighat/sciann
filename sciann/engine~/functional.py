@@ -53,7 +53,7 @@ class Functional(object):
                  bias_initializer=default_bias_initializer,
                  dtype=None,
                  trainable=True,
-                 **kwargs,):
+                 **kwargs):
         # check data-type.
         if dtype is None:
             dtype = K.floatx()

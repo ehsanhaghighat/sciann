@@ -36,7 +36,7 @@ class Field(Dense):
                  kernel_initializer=default_kernel_initializer(),
                  bias_initializer=default_bias_initializer(),
                  trainable=True,
-                 dtype=None,):
+                 dtype=None):
         if not dtype:
             dtype = floatx()
         elif not dtype == floatx():
