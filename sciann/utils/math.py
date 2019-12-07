@@ -578,7 +578,7 @@ def getitem(x, item):
     res = x.copy()
 
     ys = []
-    lmbd = [Lambda(lambda xx: xx.__getitem__(item)) for xx in x.outputs]
+    lmbd = [Lambda(lambda xx: K.slice(xx, [0, item], [-1, 1])) for xx in x.outputs]
     for l, y in zip(lmbd, x.outputs):
         # l.name = "slice/" + l.name.split("_")[-1]
         ys.append(l(y))
