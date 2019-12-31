@@ -46,9 +46,9 @@ class Parameter(Functional):
         if not all([isinstance(x, Variable) for x in inputs]):
             raise TypeError
 
-        inputs_tensors, layers = [], []
+        input_tensors, layers = [], []
         for v in inputs:
-            inputs_tensors += v.outputs
+            input_tensors += v.outputs
             layers += v.layers
 
         if non_neg is None:
@@ -57,13 +57,16 @@ class Parameter(Functional):
             ParameterBase(val=val, min_max=min_max, non_neg=non_neg, name=name)
         )
 
-        lay = Concatenate()
-        lay.name = "conct_" + lay.name.split("_")[-1]
-        lay_input = lay(inputs_tensors)
+        if len(input_tensors) > 1:
+            lay = Concatenate()
+            lay.name = "conct_" + lay.name.split("_")[-1]
+            lay_input = lay(input_tensors)
+        else:
+            lay_input = input_tensors[0]
         outputs = layers[-1](lay_input)
 
         super(Parameter, self).__init__(
-            inputs=to_list(inputs_tensors),
+            inputs=to_list(input_tensors),
             outputs=to_list(outputs),
             layers=to_list(layers)
         )

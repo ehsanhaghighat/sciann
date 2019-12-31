@@ -248,7 +248,7 @@ class SciModel(object):
                 K.set_value(self.model.optimizer.lr, lr_rates)
                 callbacks.append(
                     k.callbacks.callbacks.ReduceLROnPlateau(
-                        monitor='loss', factor=0.5, patience=10, cooldown=10, verbose=1, mode='auto', min_delta=0.0001, min_lr=1e-12
+                        monitor='loss', factor=0.5, patience=100, cooldown=100, verbose=1, mode='auto', min_delta=0.0001, min_lr=1e-6
                     )
                 )
             elif isinstance(learning_rate, (tuple, list)):
@@ -332,11 +332,12 @@ class SciModel(object):
         if save_weights_to is not None:
             try:
                 self._model.save_weights("{}-start.hdf5".format(save_weights_to))
-                if save_weights_freq>0:
-                    model_file_path = save_weights_to + "-{epoch:05d}-{loss:.3e}.hdf5"
-                    model_check_point = k.callbacks.callbacks.ModelCheckpoint(
-                        model_file_path, monitor='loss', save_weights_only=True, mode='auto', period=save_weights_freq
-                    )
+                model_file_path = save_weights_to + "-{epoch:05d}-{loss:.3e}.hdf5"
+                model_check_point = k.callbacks.callbacks.ModelCheckpoint(
+                    model_file_path, monitor='loss', save_weights_only=True, mode='auto',
+                    period=10 if save_weights_freq==0 else save_weights_freq,
+                    save_best_only=True if save_weights_freq==0 else False
+                )
             except:
                 print("\nWARNING: Failed to save model.weights to the provided path: {}\n".format(save_weights_to))
         if model_file_path is not None:
@@ -358,37 +359,6 @@ class SciModel(object):
                 print("\nWARNING: Failed to save model.weights to the provided path: {}\n".format(save_weights_to))
         # return the history.
         return history
-
-    def solve(self,
-              x_true,
-              y_true,
-              weights=None,
-              target_weights=None,
-              epochs=10,
-              batch_size=2**8,
-              shuffle=True,
-              callbacks=None,
-              stop_after=100,
-              default_zero_weight=1.0e-10,
-              **kwargs):
-        """ This is a legacy method - please use `train` instead of `solve`.
-        """
-        print('\n'
-              'WARNING: SciModel.solve \n'
-              '++++ Legacy method: please use `train` instead of `solve`. \n')
-        return self.train(
-            x_true,
-            y_true,
-            weights,
-            target_weights,
-            epochs,
-            batch_size,
-            shuffle,
-            callbacks,
-            stop_after,
-            default_zero_weight,
-            **kwargs
-        )
 
     def predict(self, xs,
                 batch_size=None,
