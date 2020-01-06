@@ -16,7 +16,7 @@ Fx = Field(name='Fx', units=10)
 ### Field
 
 ```python
-sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x131502f28>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x13324c898>, bias_initializer=<keras.initializers.RandomUniform object at 0x13324cc18>, trainable=True, dtype=None)
+sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x7fe49071e4d0>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x7fe4c0e19650>, bias_initializer=<keras.initializers.RandomUniform object at 0x7fe4c0e19750>, trainable=True, dtype=None)
 ```
 
 Configures the `Field` class for the model outputs.

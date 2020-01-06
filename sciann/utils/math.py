@@ -443,6 +443,18 @@ def abs(x):
     return _apply_function(x, 'abs')
 
 
+def sign(x):
+    """Computes abs of x element-wise.
+
+    # Arguments
+        x: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    return _apply_function(x, 'sign')
+
+
 def log(x):
     """Computes log of x element-wise.
 

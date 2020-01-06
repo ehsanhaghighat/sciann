@@ -36,7 +36,7 @@ model = SciModel(x, Data(Fxy),
 ### Functional
 
 ```python
-sciann.functionals.functional.Functional(fields=None, variables=None, hidden_layers=None, activation='tanh', enrichment='linear', kernel_initializer=<keras.initializers.VarianceScaling object at 0x13325ef60>, bias_initializer=<keras.initializers.RandomUniform object at 0x133260048>, dtype=None, trainable=True)
+sciann.functionals.functional.Functional(fields=None, variables=None, hidden_layers=None, activation='tanh', output_activation='linear', kernel_initializer=<keras.initializers.VarianceScaling object at 0x7fe4c0e1dfd0>, bias_initializer=<keras.initializers.RandomUniform object at 0x7fe4c0e22090>, dtype=None, trainable=True)
 ```
 
 Configures the Functional object (Neural Network).
@@ -55,7 +55,7 @@ __Arguments__
 - __activation__: defaulted to "tanh".
     Activation function for the hidden layers.
     Last layer will have a linear output.
-- __enrichment__: defaulted to "linear".
+- __output_activation__: defaulted to "linear".
     Activation function to be applied to the network output.
 - __kernel_initializer__: Initializer of the `Kernel`, from `k.initializers`.
 - __bias_initializer__: Initializer of the `Bias`, from `k.initializers`.
@@ -103,7 +103,7 @@ __Raises__
 ### Field
 
 ```python
-sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x131502f28>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x13324c898>, bias_initializer=<keras.initializers.RandomUniform object at 0x13324cc18>, trainable=True, dtype=None)
+sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x7fe49071e4d0>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x7fe4c0e19650>, bias_initializer=<keras.initializers.RandomUniform object at 0x7fe4c0e19750>, trainable=True, dtype=None)
 ```
 
 Configures the `Field` class for the model outputs.

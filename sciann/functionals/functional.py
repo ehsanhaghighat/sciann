@@ -30,7 +30,7 @@ class Functional(object):
         activation: defaulted to "tanh".
             Activation function for the hidden layers.
             Last layer will have a linear output.
-        enrichment: defaulted to "linear".
+        output_activation: defaulted to "linear".
             Activation function to be applied to the network output.
         kernel_initializer: Initializer of the `Kernel`, from `k.initializers`.
         bias_initializer: Initializer of the `Bias`, from `k.initializers`.
@@ -50,7 +50,7 @@ class Functional(object):
                  variables=None,
                  hidden_layers=None,
                  activation="tanh",
-                 enrichment="linear",
+                 output_activation="linear",
                  kernel_initializer=default_kernel_initializer(),
                  bias_initializer=default_bias_initializer(),
                  dtype=None,
@@ -70,7 +70,7 @@ class Functional(object):
         # prepares fields.
         fields = to_list(fields)
         if all([isinstance(fld, str) for fld in fields]):
-            outputs = [
+            output_fileds = [
                 Field(
                     name=fld,
                     dtype=dtype,
@@ -81,7 +81,7 @@ class Functional(object):
                 for fld in fields
             ]
         elif all([validations.is_field(fld) for fld in fields]):
-            outputs = fields
+            output_fileds = fields
         else:
             raise TypeError(
                 'Please provide a "list" of field names of'
@@ -112,10 +112,6 @@ class Functional(object):
             'Expected an activation function name not a "list". '
         afunc = get_activation(activation)
 
-        # check enrichment functions.
-        enrichment = to_list(enrichment)
-        efuncs = get_activation(enrichment)
-
         # Input layers.
         if len(inputs) == 1:
             net_input = inputs[0]
@@ -125,49 +121,52 @@ class Functional(object):
             net_input = layer(inputs)
 
         # Define the output network.
-        net = []
-        for enrich in efuncs:
-            net.append(net_input)
-            for nLay, nNeuron in enumerate(hidden_layers):
-                # Add the layer.
-                layer = Dense(
-                    nNeuron,
-                    kernel_initializer=kernel_initializer,
-                    bias_initializer=bias_initializer,
-                    trainable=trainable,
-                    dtype=dtype,
-                )
-                layer.name = "D{:d}b_".format(nNeuron) + layer.name.split("_")[-1]
-                layers.append(layer)
-                net[-1] = layer(net[-1])
-                # Apply the activation.
-                if afunc.__name__ != 'linear': #nLay<len(hidden_layers)-1 and
-                    layer = Activation(afunc)
-                    layer.name = "{}_".format(afunc.__name__) + layer.name.split("_")[-1]
-                    layers.append(layer)
-                    net[-1] = layer(net[-1])
-
-            # add the enrichment (activation on the output).
-            if enrich.__name__ != 'linear':
-                layer = Activation(enrich)
-                layer.name = "{}_".format(enrich.__name__) + layer.name.split("_")[-1]
+        net = [net_input]
+        for nLay, nNeuron in enumerate(hidden_layers):
+            # Add the layer.
+            layer = Dense(
+                nNeuron,
+                kernel_initializer=kernel_initializer,
+                bias_initializer=bias_initializer,
+                trainable=trainable,
+                dtype=dtype,
+            )
+            layer.name = "D{:d}b_".format(nNeuron) + layer.name.split("_")[-1]
+            layers.append(layer)
+            net[-1] = layer(net[-1])
+            # Apply the activation.
+            if afunc.__name__ != 'linear': #nLay<len(hidden_layers)-1 and
+                layer = Activation(afunc)
+                layer.name = "{}_".format(afunc.__name__) + layer.name.split("_")[-1]
                 layers.append(layer)
                 net[-1] = layer(net[-1])
 
         # store output layers.
-        for out in outputs:
+        for out in output_fileds:
             layers.append(out)
 
         # Assign to the output variable
         if len(net) == 1:
             net_output = net[0]
         else:
+            raise ValueError("Legacy for Enrichment: Must be updated. ")
             layer = Concatenate()
             layer.name = "conct_" + layer.name.split("_")[-1]
             net_output = layer(net)
 
+        # check output activation functions.
+        output_func = get_activation(output_activation)
         # Define the final outputs of each network
-        outputs = [out(net_output) for out in outputs]
+        outputs = []
+        for out in output_fileds:
+            # add the activation on the output.
+            if output_func.__name__ != 'linear':
+                layer = Activation(output_func)
+                layer.name = "{}_".format(output_func.__name__) + layer.name.split("_")[-1]
+                layers.append(layer)
+                outputs.append(layer(out(net_output)))
+            else:
+                outputs.append(out(net_output))
 
         self._inputs = inputs
         self._outputs = outputs

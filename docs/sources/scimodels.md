@@ -128,18 +128,6 @@ A Keras 'History' object after performing fitting.
     
 ----
 
-### solve
-
-
-```python
-solve(x_true, y_true, weights=None, target_weights=None, epochs=10, batch_size=256, shuffle=True, callbacks=None, stop_after=100, default_zero_weight=1e-10)
-```
-
-
-This is a legacy method - please use `train` instead of `solve`.
-
-----
-
 ### predict
 
 
