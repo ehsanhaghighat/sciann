@@ -191,7 +191,7 @@ class SciModel(object):
               learning_rate=0.001,
               shuffle=True,
               callbacks=None,
-              stop_after=10,
+              stop_after=None,
               save_weights_to=None,
               save_weights_freq=0,
               default_zero_weight=1.0e-10,
@@ -226,7 +226,7 @@ class SciModel(object):
                 Default value is True.
             callbacks: List of `keras.callbacks.Callback` instances.
             stop_after: To stop after certain missed epochs.
-                Defaulted to 10.
+                Defaulted to epochs.
             save_weights_to: (file_path) If you want to save the state of the model (at the end of the training).
             save_weights_freq: (Integer) Save weights every N epcohs.
                 Defaulted to 0.
@@ -248,7 +248,10 @@ class SciModel(object):
                 K.set_value(self.model.optimizer.lr, lr_rates)
                 callbacks.append(
                     k.callbacks.callbacks.ReduceLROnPlateau(
-                        monitor='loss', factor=0.5, patience=100, cooldown=100, verbose=1, mode='auto', min_delta=0.0001, min_lr=1e-6
+                        monitor='loss', factor=0.5,
+                        patience=epochs/10, cooldown=epochs/10,
+                        verbose=1, mode='auto', min_delta=0.001,
+                        min_lr=1e-3*lr_rates
                     )
                 )
             elif isinstance(learning_rate, (tuple, list)):
@@ -263,6 +266,8 @@ class SciModel(object):
                     "learning rate: expecting a `float` or a tuple/list of two arrays"
                     " with `epochs` and `learning rates`"
                 )
+            if stop_after is None:
+                stop_after = epochs
             callbacks += [
                 k.callbacks.EarlyStopping(monitor="loss", mode='auto', verbose=1, patience=stop_after),
                 k.callbacks.TerminateOnNaN(),

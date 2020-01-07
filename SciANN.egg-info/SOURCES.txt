@@ -16,6 +16,7 @@ docs/structure.py
 docs/__pycache__/__init__.cpython-36.pyc
 docs/__pycache__/__init__.cpython-37.pyc
 docs/__pycache__/structure.cpython-36.pyc
+docs/__pycache__/structure.cpython-37.pyc
 docs/sources/CNAME
 docs/sources/constraints.md
 docs/sources/contributing.md

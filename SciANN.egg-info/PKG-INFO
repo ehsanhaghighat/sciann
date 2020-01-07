@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: SciANN
-Version: 0.4.2.1
+Version: 0.4.2.2
 Summary: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks.
 Home-page: https://github.com/sciann/sciann
 Author: Ehsan Haghighat
