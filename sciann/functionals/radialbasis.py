@@ -2,9 +2,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from ..utils import *
-
+import keras.backend as K
 from keras.layers import InputLayer
+
+from ..utils import to_list
+from ..utils import Lambda
 
 from .functional import Functional
 from .variable import Variable

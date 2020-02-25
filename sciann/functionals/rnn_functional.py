@@ -5,11 +5,15 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from ..utils import *
-
+import keras.backend as K
 from keras.layers import Dense, LSTM, SimpleRNN
 from keras.layers import Activation
 from keras.layers import Concatenate
+
+from ..utils import default_bias_initializer, default_kernel_initializer
+from ..utils import to_list, unpack_singleton, get_activation
+from ..utils import validations
+from ..utils import math
 
 from .rnn_field import RNNField
 
@@ -242,6 +246,13 @@ class RNNFunctional(object):
     def append_to_outputs(self, outputs):
         self.outputs = self.outputs + outputs
 
+    def set_trainable(self, val):
+        if isinstance(val, bool):
+            for l in self._layers:
+                l.trainable = val
+        else:
+            raise ValueError('Expected a boolean value: True or False')
+
     def split(self):
         """ In the case of `Functional` with multiple outputs,
             you can split the outputs and get an associated functional.
@@ -277,31 +288,31 @@ class RNNFunctional(object):
         return self*-1.0
 
     def __add__(self, other):
-        return add(self, other)
+        return math.add(self, other)
 
     def __radd__(self, other):
-        return radd(self, other)
+        return math.radd(self, other)
 
     def __sub__(self, other):
-        return sub(self, other)
+        return math.sub(self, other)
 
     def __rsub__(self, other):
-        return rsub(self, other)
+        return math.rsub(self, other)
 
     def __mul__(self, other):
-        return mul(self, other)
+        return math.mul(self, other)
 
     def __rmul__(self, other):
-        return rmul(self, other)
+        return math.rmul(self, other)
 
     def __truediv__(self, other):
-        return div(self, other)
+        return math.div(self, other)
 
     def __rtruediv__(self, other):
-        return rdiv(self, other)
+        return math.rdiv(self, other)
 
     def __pow__(self, power):
-        return pow(self, power)
+        return math.pow(self, power)
 
     def diff(self, *args, **kwargs):
-        return diff(self, *args, **kwargs)
+        return math.diff(self, *args, **kwargs)

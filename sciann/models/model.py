@@ -7,10 +7,15 @@ from __future__ import print_function
 
 import os
 
-from ..utils import *
+import keras.backend as K
+import keras as k
+import numpy as np
 
 from keras.models import Model
 from keras.utils import plot_model
+
+from ..utils import unpack_singleton, to_list
+from ..utils import is_variable, is_constraint, is_functional
 
 from ..functionals import Variable
 from ..functionals import RadialBasis
@@ -123,6 +128,8 @@ class SciModel(object):
             loss=loss_func,
             optimizer=optimizer,
         )
+        # model.train_function = True
+
         # set initial state of the model.
         if load_weights_from is not None:
             if os.path.exists(load_weights_from): 
@@ -194,7 +201,7 @@ class SciModel(object):
               stop_after=None,
               save_weights_to=None,
               save_weights_freq=0,
-              default_zero_weight=1.0e-10,
+              default_zero_weight=0.0,
               **kwargs):
         """Performs the training on the model.
 
@@ -355,7 +362,7 @@ class SciModel(object):
             batch_size=batch_size,
             shuffle=shuffle,
             callbacks=callbacks,
-            **kwargs,
+            **kwargs
         )
         if save_weights_to is not None:
             try:

@@ -14,8 +14,8 @@ SciANN model.
 '''
 
 import numpy as np
-from sciann import Variable, Functional, SciModel
-from sciann.constraints import Data
+from sciann import Variable, Functional, SciModel, Parameter
+from sciann.constraints import Data, MinMax
 
 
 # Synthetic data generated from sin function over [0, 2pi]
@@ -23,24 +23,28 @@ x_true = np.linspace(0, np.pi*2, 10000)
 y_true = np.sin(x_true)
 
 # The network inputs should be defined with Variable.
-x = Variable('x', dtype='float32')
+x = Variable('x', dtype='float64')
 
 # Each network is defined by Functional.
 y = Functional('y', x, [10, 10, 10], activation='tanh')
+
+d = Parameter(2.0, inputs=x)
+
+c2 = MinMax(d, -1.0, -0.5, penalty=10.0)
 
 # Define the target (output) of your model.
 c1 = Data(y)
 
 # The model is formed with input `x` and condition `c1`.
-model = SciModel(x, c1)
+model = SciModel(x, [c1, c2])
 
 # Training: .train runs the optimization and finds the parameters.
-model.train(x_true, y_true,
+model.train(x_true, 
+            [y_true, 'zeros'],
             batch_size=32,
-            epochs=100,
-            save_weights_to='example-fitting-1d',
-            save_weights_freq=10)
+            epochs=100)
 
 # used to evaluate the model after the training.
 y_pred = model.predict(x_true)
 
+print(d.eval(model, x_true).mean())

@@ -5,7 +5,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from .constraint import *
+from .constraint import Constraint
+from ..utils import is_functional
 
 
 class Data(Constraint):

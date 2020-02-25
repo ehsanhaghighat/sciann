@@ -29,6 +29,7 @@ year={2019}
 
 SciANN is compatible with: __Python 2.7-3.6__.
 
+Have questions or like collaborations, email [Ehsan Haghighat](mailto:ehsanhaghighat@sciann.com).
 
 ------------------
 

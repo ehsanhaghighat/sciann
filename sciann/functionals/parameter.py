@@ -5,11 +5,15 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from ..utils import *
+import keras as k
+import keras.backend as K
 
 from keras.layers import Dense
 from keras.layers import Concatenate
 from keras.layers import InputSpec
+from keras.constraints import MinMaxNorm
+
+from ..utils import to_list
 
 from .functional import Functional
 from .variable import Variable
@@ -78,7 +82,7 @@ class ParameterBase(Dense):
 
     # Arguments
         val (float): Initial value for the parameter.
-        min_max ([MIN, MAX]): A range to constrain the value of parameter.
+        min_max ([MIN, MAX, [Penalty]]): A range to constrain the value of parameter.
             This constraint will overwrite non_neg constraint if both are chosen.
         non_neg (boolean): True (default) if only non-negative values are expected.
         **kwargs: keras.layer.Dense accepted arguments.
@@ -86,7 +90,7 @@ class ParameterBase(Dense):
     def __init__(self, val=1.0, min_max=None, non_neg=True, **kwargs):
         cst = None
         if min_max is not None:
-            cst = MinMax(min_value=min_max[0], max_value=min_max[1])
+            cst = MinMax(min_value=min_max[0], max_value=min_max[1], penalty=1.0 if len(min_max)==2 else min_max[2])
             val = (min_max[0] + min_max[1])/2.0
         elif non_neg:
             cst = k.constraints.non_neg()
@@ -181,16 +185,13 @@ class MinMax(Constraint):
         max_value: the maximum norm for the incoming weights.
     """
 
-    def __init__(self, min_value=0.0, max_value=1.0):
+    def __init__(self, min_value=0.0, max_value=1.0, penalty=1.0):
         self.min_value = min_value
         self.max_value = max_value
+        self.penalty = penalty
 
     def __call__(self, w):
-        d = self.max_value - self.min_value
-        w = K.square(K.relu(w - self.max_value)) + K.square(K.relu(self.min_value - w))
-        w = K.square(K.clip(w - self.max_value, 0.0, 100*d)) + \
-            K.square(K.clip(self.min_value - w, 0.0, 100*d))
-        return w / d**2
+        return MinMaxNorm(self.min_value, self.max_value, self.penalty)(w)
 
     def get_config(self):
         return {'min_value': self.min_value,

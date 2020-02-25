@@ -17,7 +17,7 @@ This is precisely because we need to perform differentiation with respect to (x,
 
 ---
 
-<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/variable.py#L11)</span>
+<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/variable.py#L10)</span>
 ### Variable
 
 ```python

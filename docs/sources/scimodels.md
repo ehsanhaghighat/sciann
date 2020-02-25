@@ -30,7 +30,7 @@ Check Keras' documentation for more details.
 
 ---
 
-<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/models/model.py#L20)</span>
+<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/models/model.py#L25)</span>
 ### SciModel
 
 ```python
@@ -81,7 +81,7 @@ __Raises__
 
 
 ```python
-train(x_true, y_true, weights=None, target_weights=None, batch_size=64, epochs=100, learning_rate=0.001, shuffle=True, callbacks=None, stop_after=None, save_weights_to=None, save_weights_freq=0, default_zero_weight=1e-10)
+train(x_true, y_true, weights=None, target_weights=None, batch_size=64, epochs=100, learning_rate=0.001, shuffle=True, callbacks=None, stop_after=None, save_weights_to=None, save_weights_freq=0, default_zero_weight=0.0)
 ```
 
 

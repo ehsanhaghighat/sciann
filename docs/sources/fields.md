@@ -12,11 +12,11 @@ Fx = Field(name='Fx', units=10)
 
 ---
 
-<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/field.py#L11)</span>
+<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/field.py#L12)</span>
 ### Field
 
 ```python
-sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x7fc0c94665f0>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x7fc0bafb5c90>, bias_initializer=<keras.initializers.RandomUniform object at 0x7fc0bafb5d90>, trainable=True, dtype=None)
+sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x6420c24d0>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x1a43f87190>, bias_initializer=<keras.initializers.RandomUniform object at 0x1a43f87250>, trainable=True, dtype=None)
 ```
 
 Configures the `Field` class for the model outputs.

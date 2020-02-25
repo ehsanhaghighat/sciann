@@ -2,7 +2,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from ..utils import *
+from ..utils import default_bias_initializer, default_kernel_initializer
+from ..utils import floatx, set_floatx
 
 from keras.layers import Dense
 from keras.activations import linear

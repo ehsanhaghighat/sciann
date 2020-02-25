@@ -5,7 +5,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from .constraint import *
+from .constraint import Constraint
+from ..utils import is_functional
+from ..utils import relu, sign, abs, tanh
 
 
 class MinMax(Constraint):
@@ -21,23 +23,28 @@ class MinMax(Constraint):
     # Raises
         ValueError: 'cond' should be a functional object.
     """
-    def __init__(self, cond, min_value=None, max_value=None, name="minmax"):
+    def __init__(self, cond, min_value=None, max_value=None, penalty=1.0, name="minmax"):
         if not is_functional(cond):
             raise ValueError(
                 "Expected a Functional object, received a "
                 "{} - {}".format(type(cond), cond)
             )
-        if min_value > max_value:
+        if min_value is not None and max_value is not None and min_value > max_value:
             raise ValueError(
                 "Check inputs: `min_value` should be smaller than `max_value`. "
             )
         try:
             delta = max_value - min_value
-            cond = (relu(cond - max_value)**2 + relu(min_value - cond)**2) / delta**2
+            const = 0.0
+            if min_value is not None:
+                const += (1.0 - sign(cond - min_value)) * abs(cond - min_value)
+            if max_value is not None:
+                const += (1.0 + sign(cond - max_value)) * abs(cond - max_value)
+            const *= penalty
         except (ValueError, TypeError):
             assert False, 'Unexpected error - cannot evaluate the regularization. '
 
         super(MinMax, self).__init__(
-            cond=cond,
+            cond=const,
             name=name
         )

@@ -32,11 +32,11 @@ model = SciModel(x, Data(Fxy),
 
 ---
 
-<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/functional.py#L17)</span>
+<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/functional.py#L23)</span>
 ### Functional
 
 ```python
-sciann.functionals.functional.Functional(fields=None, variables=None, hidden_layers=None, activation='tanh', output_activation='linear', kernel_initializer=<keras.initializers.VarianceScaling object at 0x7fc0bafc1610>, bias_initializer=<keras.initializers.RandomUniform object at 0x7fc0bafc1690>, dtype=None, trainable=True)
+sciann.functionals.functional.Functional(fields=None, variables=None, hidden_layers=None, activation='tanh', output_activation='linear', kernel_initializer=<keras.initializers.VarianceScaling object at 0x1a43f8b990>, bias_initializer=<keras.initializers.RandomUniform object at 0x1a43f8ba10>, dtype=None, trainable=True)
 ```
 
 Configures the Functional object (Neural Network).
@@ -73,7 +73,7 @@ __Raises__
     
 ----
 
-<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/variable.py#L11)</span>
+<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/variable.py#L10)</span>
 ### Variable
 
 ```python
@@ -99,11 +99,11 @@ __Raises__
     
 ----
 
-<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/field.py#L11)</span>
+<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/field.py#L12)</span>
 ### Field
 
 ```python
-sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x7fc0c94665f0>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x7fc0bafb5c90>, bias_initializer=<keras.initializers.RandomUniform object at 0x7fc0bafb5d90>, trainable=True, dtype=None)
+sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x6420c24d0>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x1a43f87190>, bias_initializer=<keras.initializers.RandomUniform object at 0x1a43f87250>, trainable=True, dtype=None)
 ```
 
 Configures the `Field` class for the model outputs.
@@ -130,7 +130,7 @@ __Raises__
     
 ----
 
-<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/parameter.py#L18)</span>
+<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/parameter.py#L22)</span>
 ### Parameter
 
 ```python
