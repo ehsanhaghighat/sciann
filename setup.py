@@ -15,7 +15,7 @@ and is distributed under the MIT license.
 
 setup(
     name='SciANN',
-    version='0.4.3',
+    version='0.4.3.1',
     description='A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks.',
     long_description=long_description,
     author='Ehsan Haghighat',
