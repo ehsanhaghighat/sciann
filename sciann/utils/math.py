@@ -552,6 +552,28 @@ def _apply_function(x, fname, **kwargs):
     return res
 
 
+def getitem(x, item):
+    """returns specific item of a tensor (Functional).
+
+    # Arguments
+        item: Item list.
+
+    # Returns
+        A new functional object.
+    """
+    validate_functional(x)
+    res = x.copy()
+
+    ys = []
+    lmbd = [Lambda(lambda xx: K.slice(xx, [0, item], [-1, 1])) for xx in x.outputs]
+    for l, y in zip(lmbd, x.outputs):
+        # l.name = "slice/" + l.name.split("_")[-1]
+        ys.append(l(y))
+
+    res.outputs = ys
+    return res
+
+
 def gradients(ys, xs, order=1):
     """Returns the gradients of y in `ys` w.r.t. x in `xs`.
     
@@ -575,28 +597,6 @@ def gradients(ys, xs, order=1):
             )
         )
     return ds
-
-
-def getitem(x, item):
-    """returns specific item of a tensor (Functional).
-
-    # Arguments
-        item: Item list.
-
-    # Returns
-        A new functional object.
-    """
-    validate_functional(x)
-    res = x.copy()
-
-    ys = []
-    lmbd = [Lambda(lambda xx: K.slice(xx, [0, item], [-1, 1])) for xx in x.outputs]
-    for l, y in zip(lmbd, x.outputs):
-        # l.name = "slice/" + l.name.split("_")[-1]
-        ys.append(l(y))
-
-    res.outputs = ys
-    return res
 
 
 def lambda_gradient(ys, xs, order=1, name=''):

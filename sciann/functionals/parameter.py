@@ -38,7 +38,6 @@ class Parameter(Functional):
         **kwargs: keras.layer.Dense accepted arguments.
         
     """
-
     def __init__(self,
                  val=1.0,
                  min_max=None,
@@ -47,7 +46,7 @@ class Parameter(Functional):
                  non_neg=None):
 
         inputs = to_list(inputs)
-        if not all([isinstance(x, Variable) for x in inputs]):
+        if not all([isinstance(x, (Variable, Functional)) for x in inputs]):
             raise TypeError
 
         input_tensors, layers = [], []
@@ -87,13 +86,17 @@ class ParameterBase(Dense):
         non_neg (boolean): True (default) if only non-negative values are expected.
         **kwargs: keras.layer.Dense accepted arguments.
     """
-    def __init__(self, val=1.0, min_max=None, non_neg=True, **kwargs):
+    def __init__(self, val=None, min_max=None, non_neg=True, **kwargs):
         cst = None
         if min_max is not None:
             cst = MinMax(min_value=min_max[0], max_value=min_max[1], penalty=1.0 if len(min_max)==2 else min_max[2])
-            val = (min_max[0] + min_max[1])/2.0
+            val = (min_max[0] + min_max[1])/2.0 if val is None else val
         elif non_neg:
             cst = k.constraints.non_neg()
+            
+        # Default value for initial values. 
+        val = 1.0 if val is None else val
+        
         super(ParameterBase, self).__init__(
             units=1,
             use_bias=True,
@@ -126,51 +129,6 @@ class ParameterBase(Dense):
 
         self.input_spec = InputSpec(min_ndim=2, axes={-1: input_dim})
         self.built = True
-
-
-
-def is_variable(f):
-    """ Checks whether `f` is a `Variable` object.
-
-    # Arguments
-        f: an object to be tested.
-
-    # Returns
-        True if Variable.
-
-    # Raises
-        ValueError: if the object cannot be tested with `isinstance`.
-
-    """
-    if isinstance(f, Variable):
-        return True
-
-    else:
-        return False
-
-
-def validate_variable(f):
-    """ if `f` is not a Variable object, raises value error.
-
-    # Arguments
-        f: an object to be tested.
-
-    # Returns
-        True if Variable, False otherwise.
-
-    # Raises
-        ValueError: if the object is not a Variable object.
-
-    """
-    if isinstance(f, Variable):
-        return True
-
-    else:
-        raise ValueError(
-            'These operations can only be applied to the `Variable` object. '
-            'Use `Keras` or `TensorFlow` functions when applying to tensors '
-            'or layers. '
-        )
 
 
 from keras.constraints import Constraint
