@@ -2,65 +2,61 @@
 
 ---
 
-### gradients
+### grad
 
 
 ```python
-sciann.utils.gradients(xs, order=1)
+sciann.utils.grad()
 ```
 
 
-Returns the gradients of y in `ys` w.r.t. x in `xs`.
-
-`ys` and `xs` are each a Tensor or a list of tensors.
+Computes gradient tensor of functional object f.
 
 __Arguments__
 
-- __ys__: A tensor or list of tesnors to be differentiated.
-- __xs__: A tensor or list of tensors to be used for differentiation.
-- __order__: Order of differentiation. 
+- __f__: Functional object.
+- __ys__: layer name for `ys` to differentiate.
+- __xs__: layer name for `xs` to be differentiated w.r.t.
+- __order__: order of differentiation w.r.t. xs - defaulted to 1.
 
 __Returns__
 
-A list of `D^n y / Dx^n` for each y and x in `ys` and `xs`.
+A new functional object.
     
 ----
 
-### lambda_gradient
+### diag_grad
 
 
 ```python
-sciann.utils.lambda_gradient(xs, order=1, name='')
+sciann.utils.diag_grad()
 ```
 
 
-Returns the gradients of y in `ys` w.r.t. x in `xs` using Lambda layers.
-
-`ys` and `xs` are each a Tensor or a list of tensors.
+Computes diag of gradient tensor of functional object f.
 
 __Arguments__
 
-- __ys__: A tensor or list of tesnors to be differentiated.
-- __xs__: A tensor or list of tensors to be used for differentiation.
-- __name__: A str name for the Lambda layer. 
+- __f__: Functional object.
+- __ys__: layer name for `ys` to differentiate.
+- __xs__: layer name for `xs` to be differentiated w.r.t.
+- __order__: order of differentiation w.r.t. xs - defaulted to 1.
 
 __Returns__
 
-A tuple, `(layers, grads)`.
-- __layers__: A Lambda layer or list of Lambda layers where the gradient operator is applied.
-- __grads__: A gradient tensor or list of gradient tensors. 
+A new functional object.
     
 ----
 
-### diff
+### div
 
 
 ```python
-sciann.utils.diff()
+sciann.utils.div()
 ```
 
 
-Computes diff of functional object f.
+Computes Divergence of functional object f.
 
 __Arguments__
 
@@ -345,18 +341,20 @@ A Functional.
 
 
 ```python
-sciann.utils.div(other)
+sciann.utils.div()
 ```
 
 
-Element-wise division applied to the `Functional` objects.
+Computes Divergence of functional object f.
 
 __Arguments__
 
 - __f__: Functional object.
-- __other__: A python number or a tensor or a functional object.
+- __ys__: layer name for `ys` to differentiate.
+- __xs__: layer name for `xs` to be differentiated w.r.t.
+- __order__: order of differentiation w.r.t. xs - defaulted to 1.
 
 __Returns__
 
-A Functional.
+A new functional object.
     

@@ -90,9 +90,9 @@ PAGES = [
     {
         'page': 'utils.md',
         'methods': [
-            utils.math.gradients,
-            utils.math.lambda_gradient,
-            utils.math.diff,
+            utils.math.grad,
+            utils.math.diag_grad,
+            utils.math.div,
             utils.math.radial_basis,
             utils.math.sin,
             utils.math.asin,

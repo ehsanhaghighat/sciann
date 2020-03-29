@@ -62,6 +62,7 @@ docs/theme/js/theme.js
 examples/.DS_Store
 examples/example-fitting-1d-lstm.py
 examples/example-fitting-1d.py
+examples/test_diff.py
 examples/__pycache__/example_fitting_1d.cpython-36.pyc
 sciann/__init__.py
 sciann/constraints/__init__.py
