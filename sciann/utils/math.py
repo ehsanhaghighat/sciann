@@ -741,7 +741,7 @@ def _div_gradients(ys, xs, order=1):
 
 
 
-def _lambda_gradient(ys, xs, order=1, type='Grad', name=''):
+def _lambda_gradient(ys, xs, order=1, gtype='Grad', name=''):
     """Returns the gradients of y in `ys` w.r.t. x in `xs` using Lambda layers.
     
     `ys` and `xs` are each a Tensor or a list of tensors.
@@ -749,7 +749,7 @@ def _lambda_gradient(ys, xs, order=1, type='Grad', name=''):
     # Arguments
         ys: A tensor or list of tesnors to be differentiated.
         xs: A tensor or list of tensors to be used for differentiation.
-        type: type of differentiation - can be:
+        gtype: type of differentiation - can be:
             - 'Grad' for gradient operation, i.e. Gij = dy_j / dx_i
             - 'dGrad' for the diagonal of gradient tensor, i.e. Gi = dy_i / dx_i
             - 'Div' for divergence operation, i.e. G = sum(dy_i / dx_i)
@@ -763,13 +763,13 @@ def _lambda_gradient(ys, xs, order=1, type='Grad', name=''):
     
     grads, layers = [], []
     for y in to_list(ys):
-        if type == 'Grad':
+        if gtype == 'Grad':
             lay = Lambda(lambda y: _gradients(y, xs, order))
             name_prefix = 'Grad_' if order == 1 else 'Grad{:d}_'.format(order)
-        elif type == 'dGrad':
+        elif gtype == 'dGrad':
             lay = Lambda(lambda y: _diag_gradients(y, xs, order))
             name_prefix = 'DiagGrad_' if order == 1 else 'Grad{:d}_'.format(order)
-        elif type == 'Div':
+        elif gtype == 'Div':
             lay = Lambda(lambda y: _div_gradients(y, xs, order))
             name_prefix = 'Div_' if order == 1 else 'Grad{:d}_'.format(order)
         else:
@@ -784,12 +784,12 @@ def _lambda_gradient(ys, xs, order=1, type='Grad', name=''):
     return (unpack_singleton(layers), unpack_singleton(grads))
 
 
-def _gdiff(f, type, *args, **kwargs):
+def _gdiff(gtype, f, *args, **kwargs):
     """Computes gradient of functional object f.
 
     # Arguments
+        gtype: gradient type - choose from (Grad, dGrad, Div)
         f: Functional object.
-        type: Grad, dGrad, Div
         ys: layer name for `ys` to differentiate.
         xs: layer name for `xs` to be differentiated w.r.t.
         order: order of differentiation w.r.t. xs - defaulted to 1.
@@ -854,7 +854,7 @@ def _gdiff(f, type, *args, **kwargs):
     res = f.copy()
     
     lay, tens = _lambda_gradient(
-        y, x, order, type, "{}_{}".format(y_name, x_name)
+        y, x, order, gtype, "{}_{}".format(y_name, x_name)
     )
 
     res.append_to_layers(to_list(lay))
@@ -875,7 +875,7 @@ def grad(f, *args, **kwargs):
     # Returns
         A new functional object.
     """
-    return _gdiff(f, "Grad", *args, **kwargs)
+    return _gdiff("Grad", f, *args, **kwargs)
 
 
 # overlaod for backward compatibility 
@@ -895,11 +895,11 @@ def diag_grad(f, *args, **kwargs):
     # Returns
         A new functional object.
     """
-    return _gdiff(f, "dGrad", *args, **kwargs)
+    return _gdiff("dGrad", f, *args, **kwargs)
 
 
 # consistency with older versions.
-def div(f, *args, **kwargs):
+def div_grad(f, *args, **kwargs):
     """Computes Divergence of functional object f.
 
     # Arguments
@@ -911,7 +911,7 @@ def div(f, *args, **kwargs):
     # Returns
         A new functional object.
     """
-    return _gdiff(f, "Div", *args, **kwargs)
+    return _gdiff("Div", f, *args, **kwargs)
 
 
 def radial_basis(xs, ci, radii):

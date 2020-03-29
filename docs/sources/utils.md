@@ -52,22 +52,20 @@ A new functional object.
 
 
 ```python
-sciann.utils.div()
+sciann.utils.div(other)
 ```
 
 
-Computes Divergence of functional object f.
+Element-wise division applied to the `Functional` objects.
 
 __Arguments__
 
 - __f__: Functional object.
-- __ys__: layer name for `ys` to differentiate.
-- __xs__: layer name for `xs` to be differentiated w.r.t.
-- __order__: order of differentiation w.r.t. xs - defaulted to 1.
+- __other__: A python number or a tensor or a functional object.
 
 __Returns__
 
-A new functional object.
+A Functional.
     
 ----
 
@@ -341,20 +339,18 @@ A Functional.
 
 
 ```python
-sciann.utils.div()
+sciann.utils.div(other)
 ```
 
 
-Computes Divergence of functional object f.
+Element-wise division applied to the `Functional` objects.
 
 __Arguments__
 
 - __f__: Functional object.
-- __ys__: layer name for `ys` to differentiate.
-- __xs__: layer name for `xs` to be differentiated w.r.t.
-- __order__: order of differentiation w.r.t. xs - defaulted to 1.
+- __other__: A python number or a tensor or a functional object.
 
 __Returns__
 
-A new functional object.
+A Functional.
     
