@@ -240,10 +240,18 @@ class Functional(object):
         )
 
     def append_to_layers(self, layers):
-        self.layers = self.layers + layers
+        if self.layers is not layers:
+            cl = [x.name for x in self.layers]
+            for x in layers:
+                if x.name in cl is not True:
+                    self.layers += [x]
 
     def append_to_inputs(self, inputs):
-        self.inputs = self.inputs + inputs
+        if self.inputs is not inputs:
+            cl = [x.name for x in self.inputs]
+            for x in inputs:
+                if x.name in cl is not True:
+                    self.inputs.append(x)
 
     def append_to_outputs(self, outputs):
         self.outputs = self.outputs + outputs

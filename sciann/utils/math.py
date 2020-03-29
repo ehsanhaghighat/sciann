@@ -260,6 +260,35 @@ def dot(f, other):
     return res
 
 
+def diag(f):
+    """Diag operation returns diagonal of outputs of (None,N,N) functional.
+
+    # Arguments
+        f: Functional object.
+
+    # Returns
+        A Functional.
+    """
+    validate_functional(f)
+
+    res = f.copy()
+    lmbd = []
+    for o in f.outputs:
+        assert len(o.shape) == 3, \
+            'Exptected output dimension to be (None, N, N)'
+        dim = o.shape[-1]
+        lmbd += [
+            Lambda(lambda x: K.concatenate([K.reshape(x[:, i, i], (-1, 1)) for i in range(dim)], axis=-1))
+        ]
+
+    res.outputs = []
+    for l, o in zip(lmbd, f.outputs):
+        l.name = "diag/" + l.name.split("_")[-1]
+        res.outputs += [l(o)]
+
+    return res
+
+
 def _apply_operation(lambda_layer, lhs, rhs=None):
     """Element-wise mathematical operation applied on the `Functional` objects.
 
@@ -564,42 +593,155 @@ def getitem(x, item):
     validate_functional(x)
     res = x.copy()
 
+    itms = (slice(None, None, None),)
+    if isinstance(item, tuple):
+        itms += item
+    else:
+        itms += (item, )
+
+    lmbd = [Lambda(lambda xx: K.reshape(xx[itms], (-1,1))) for xx in x.outputs]
+
     ys = []
-    lmbd = [Lambda(lambda xx: K.slice(xx, [0, item], [-1, 1])) for xx in x.outputs]
     for l, y in zip(lmbd, x.outputs):
-        # l.name = "slice/" + l.name.split("_")[-1]
+        l.name = "slice/" + l.name.split("_")[-1]
         ys.append(l(y))
 
     res.outputs = ys
     return res
 
 
-def gradients(ys, xs, order=1):
+def _gradients(ys, xs, order=1):
     """Returns the gradients of y in `ys` w.r.t. x in `xs`.
-    
+
     `ys` and `xs` are each a Tensor or a list of tensors.
 
     # Arguments
         ys: A tensor or list of tesnors to be differentiated.
         xs: A tensor or list of tensors to be used for differentiation.
-        order: Order of differentiation. 
+        order: Order of differentiation.
 
     # Returns
         A list of `D^n y / Dx^n` for each y and x in `ys` and `xs`.
     """
-    ds = ys
-    for i in range(order):
-        ds = unpack_singleton(
-            tf.gradients(
-                ds, xs,
-                unconnected_gradients='zero',
-                # colocate_gradients_with_ops=True, TF: V1.14.0
+    if ys.shape[-1] == 1:
+        ds = ys
+        for i in range(order):
+            ds = unpack_singleton(
+                tf.gradients(
+                    ds, xs,
+                    unconnected_gradients='zero',
+                    # colocate_gradients_with_ops=True, TF: V1.14.0
+                )
             )
-        )
+
+    else:
+        y_ids = tuple([slice(None,None) if x is None else x for x in ys.shape.as_list()])
+        ds = []
+        for j in range(y_ids[-1]):
+            ds.append(ys[y_ids[:-1] + (j,)])
+            for i in range(order):
+                ds[-1] = unpack_singleton(
+                    tf.gradients(
+                        ds[-1], xs,
+                        unconnected_gradients='zero',
+                        # colocate_gradients_with_ops=True, TF: V1.14.0
+                    )
+                )
+            new_shape = [x if x is not None else -1 for x in ds[-1].shape + (1,)]
+            ds[-1] = K.reshape(ds[-1], new_shape)
+        # The output is a tensor.
+        ds = K.concatenate([y[:,i:i+1,0] for i, y in enumerate(ds)], -1)
     return ds
 
 
-def lambda_gradient(ys, xs, order=1, name=''):
+def _diag_gradients(ys, xs, order=1):
+    """Returns the gradients of y in `ys` w.r.t. x in `xs`.
+
+    `ys` and `xs` are each a Tensor or a list of tensors.
+
+    # Arguments
+        ys: A tensor or list of tesnors to be differentiated.
+        xs: A tensor or list of tensors to be used for differentiation.
+        order: Order of differentiation.
+
+    # Returns
+        A list of `D^n y / Dx^n` for each y and x in `ys` and `xs`.
+    """
+    assert ys.shape.as_list() == xs.shape.as_list(), \
+        'Supported when X and Y has the same dimensions - ' + \
+        'Xs:{}, Ys:{}'.format(xs.shape.as_list(), ys.shape.as_list())
+
+    y_ids = tuple([slice(None, None) if x is None else x for x in ys.shape.as_list()])
+    ds = []
+    for j in range(y_ids[-1]):
+        ds.append(ys[y_ids[:-1] + (j,)])
+        for i in range(order):
+            ds[-1] = unpack_singleton(
+                tf.gradients(
+                    ds[-1], xs,
+                    unconnected_gradients='zero',
+                    # colocate_gradients_with_ops=True, TF: V1.14.0
+                )
+            )
+        ds[-1] = ds[-1][y_ids[:-1] + (j,)]
+        # check the output shape.
+        if ds[-1].shape.as_list() in ([None, ], [None, 1]):
+            new_shape = [-1, 1]
+        else:
+            raise NotImplementedError
+        ds[-1] = K.reshape(ds[-1], new_shape)
+    # The output is a tensor.
+    ds = K.concatenate(ds, -1)
+
+    return ds
+
+
+def _div_gradients(ys, xs, order=1):
+    """Returns the gradients of y in `ys` w.r.t. x in `xs`.
+
+    `ys` and `xs` are each a Tensor or a list of tensors.
+
+    # Arguments
+        ys: A tensor or list of tesnors to be differentiated.
+        xs: A tensor or list of tensors to be used for differentiation.
+        order: Order of differentiation.
+
+    # Returns
+        A list of `D^n y / Dx^n` for each y and x in `ys` and `xs`.
+    """
+    assert ys.shape.as_list() == xs.shape.as_list(), \
+        'Supported when X and Y has the same dimensions - ' + \
+        'Xs:{}, Ys:{}'.format(xs.shape.as_list(), ys.shape.as_list())
+
+    y_ids = tuple([slice(None, None) if x is None else x for x in ys.shape.as_list()])
+    res = None
+    for j in range(y_ids[-1]):
+        ds = ys[y_ids[:-1] + (j,)]
+        for i in range(order):
+            ds = unpack_singleton(
+                tf.gradients(
+                    ds, xs,
+                    unconnected_gradients='zero',
+                    # colocate_gradients_with_ops=True, TF: V1.14.0
+                )
+            )
+        ds = ds[y_ids[:-1] + (j,)]
+        # check the output shape.
+        if ds.shape.as_list() in ([None, ], [None, 1]):
+            new_shape = [-1, 1]
+        else:
+            raise NotImplementedError
+        # add outputs.
+        if res is None:
+            res = K.reshape(ds, new_shape)
+        else:
+            res += K.reshape(ds, new_shape)
+
+    return res
+
+
+
+def _lambda_gradient(ys, xs, order=1, type='Grad', name=''):
     """Returns the gradients of y in `ys` w.r.t. x in `xs` using Lambda layers.
     
     `ys` and `xs` are each a Tensor or a list of tensors.
@@ -607,6 +749,10 @@ def lambda_gradient(ys, xs, order=1, name=''):
     # Arguments
         ys: A tensor or list of tesnors to be differentiated.
         xs: A tensor or list of tensors to be used for differentiation.
+        type: type of differentiation - can be:
+            - 'Grad' for gradient operation, i.e. Gij = dy_j / dx_i
+            - 'dGrad' for the diagonal of gradient tensor, i.e. Gi = dy_i / dx_i
+            - 'Div' for divergence operation, i.e. G = sum(dy_i / dx_i)
         name: A str name for the Lambda layer. 
 
     # Returns
@@ -614,11 +760,23 @@ def lambda_gradient(ys, xs, order=1, name=''):
         layers: A Lambda layer or list of Lambda layers where the gradient operator is applied.
         grads: A gradient tensor or list of gradient tensors. 
     """
-    name_prefix = 'Grad_' if order==1 else 'Grad{:d}_'.format(order)
     
     grads, layers = [], []
     for y in to_list(ys):
-        lay = Lambda(lambda y: gradients(y, xs, order))
+        if type == 'Grad':
+            lay = Lambda(lambda y: _gradients(y, xs, order))
+            name_prefix = 'Grad_' if order == 1 else 'Grad{:d}_'.format(order)
+        elif type == 'dGrad':
+            lay = Lambda(lambda y: _diag_gradients(y, xs, order))
+            name_prefix = 'DiagGrad_' if order == 1 else 'Grad{:d}_'.format(order)
+        elif type == 'Div':
+            lay = Lambda(lambda y: _div_gradients(y, xs, order))
+            name_prefix = 'Div_' if order == 1 else 'Grad{:d}_'.format(order)
+        else:
+            raise ValueError(
+                'Unrecognised gradient type: {} \n'.format(type) +
+                '     Please choose among (Grad, dGrad, Div). '
+            )
         lay.name = name_prefix + name + '/' + lay.name
         layers += to_list(lay)
         grads += to_list(lay(y))
@@ -626,11 +784,12 @@ def lambda_gradient(ys, xs, order=1, name=''):
     return (unpack_singleton(layers), unpack_singleton(grads))
 
 
-def diff(f, *args, **kwargs):
-    """Computes diff of functional object f.
+def _gdiff(f, type, *args, **kwargs):
+    """Computes gradient of functional object f.
 
     # Arguments
         f: Functional object.
+        type: Grad, dGrad, Div
         ys: layer name for `ys` to differentiate.
         xs: layer name for `xs` to be differentiated w.r.t.
         order: order of differentiation w.r.t. xs - defaulted to 1.
@@ -694,14 +853,65 @@ def diff(f, *args, **kwargs):
 
     res = f.copy()
     
-    lay, tens = lambda_gradient(
-        y, x, order, "{}_{}".format(y_name, x_name)
+    lay, tens = _lambda_gradient(
+        y, x, order, type, "{}_{}".format(y_name, x_name)
     )
 
     res.append_to_layers(to_list(lay))
     res.outputs = to_list(tens)
 
     return res
+
+
+def grad(f, *args, **kwargs):
+    """Computes gradient tensor of functional object f.
+
+    # Arguments
+        f: Functional object.
+        ys: layer name for `ys` to differentiate.
+        xs: layer name for `xs` to be differentiated w.r.t.
+        order: order of differentiation w.r.t. xs - defaulted to 1.
+
+    # Returns
+        A new functional object.
+    """
+    return _gdiff(f, "Grad", *args, **kwargs)
+
+
+# overlaod for backward compatibility 
+diff = grad
+
+
+# consistency with older versions.
+def diag_grad(f, *args, **kwargs):
+    """Computes diag of gradient tensor of functional object f.
+
+    # Arguments
+        f: Functional object.
+        ys: layer name for `ys` to differentiate.
+        xs: layer name for `xs` to be differentiated w.r.t.
+        order: order of differentiation w.r.t. xs - defaulted to 1.
+
+    # Returns
+        A new functional object.
+    """
+    return _gdiff(f, "dGrad", *args, **kwargs)
+
+
+# consistency with older versions.
+def div(f, *args, **kwargs):
+    """Computes Divergence of functional object f.
+
+    # Arguments
+        f: Functional object.
+        ys: layer name for `ys` to differentiate.
+        xs: layer name for `xs` to be differentiated w.r.t.
+        order: order of differentiation w.r.t. xs - defaulted to 1.
+
+    # Returns
+        A new functional object.
+    """
+    return _gdiff(f, "Div", *args, **kwargs)
 
 
 def radial_basis(xs, ci, radii):
