@@ -31,21 +31,18 @@ y = Functional('y', x, [10, 10, 10], activation='tanh')
 
 d = Parameter(2.0, inputs=x)
 
-c2 = MinMax(d, -1.0, -0.5, penalty=10.0)
-
 # Define the target (output) of your model.
 c1 = Data(y)
 
 # The model is formed with input `x` and condition `c1`.
-model = SciModel(x, [c1, c2])
+model = SciModel(x, c1)
 
 # Training: .train runs the optimization and finds the parameters.
 model.train(x_true, 
-            [y_true, 'zeros'],
+            y_true,
             batch_size=32,
             epochs=100)
 
 # used to evaluate the model after the training.
 y_pred = model.predict(x_true)
-
-print(d.eval(model, x_true).mean())```
+```

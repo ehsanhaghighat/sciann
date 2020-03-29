@@ -36,7 +36,7 @@ model = SciModel(x, Data(Fxy),
 ### Functional
 
 ```python
-sciann.functionals.functional.Functional(fields=None, variables=None, hidden_layers=None, activation='tanh', output_activation='linear', kernel_initializer=<keras.initializers.VarianceScaling object at 0x7ff93057a910>, bias_initializer=<keras.initializers.RandomUniform object at 0x7ff93057a990>, dtype=None, trainable=True)
+sciann.functionals.functional.Functional(fields=None, variables=None, hidden_layers=None, activation='tanh', output_activation='linear', kernel_initializer=<keras.initializers.VarianceScaling object at 0x7fdd1073b450>, bias_initializer=<keras.initializers.RandomUniform object at 0x7fdd1073b4d0>, dtype=None, trainable=True)
 ```
 
 Configures the Functional object (Neural Network).
@@ -103,7 +103,7 @@ __Raises__
 ### Field
 
 ```python
-sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x7ff95842eb90>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x7ff930576190>, bias_initializer=<keras.initializers.RandomUniform object at 0x7ff930576250>, trainable=True, dtype=None)
+sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x7fdd235c6710>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x7fdd1072ec90>, bias_initializer=<keras.initializers.RandomUniform object at 0x7fdd1072ed50>, trainable=True, dtype=None)
 ```
 
 Configures the `Field` class for the model outputs.

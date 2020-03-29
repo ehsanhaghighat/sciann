@@ -243,25 +243,27 @@ def dot(f, other):
         A Functional.
     """
     validate_functional(f)
+    validate_functional(other)
+    assert len(f.outputs) == len(other.outputs)
 
     res = f.copy()
-    if is_functional(other):
-        res.append_to_inputs(other.inputs)
-        res.append_to_layers(other.layers)
-        lmbd = [k.layers.Dot(axes=-1) for X in f.outputs]
-    else:
-        lmbd = [Lambda(lambda x: x*other) for X in f.outputs]
-
-    for l in lmbd:
+    res.append_to_inputs(other.inputs)
+    res.append_to_layers(other.layers)
+    res.outputs = []
+    for fl, fr in zip(f.outputs, other.outputs):
+        assert fl.shape.as_list() == fr.shape.as_list(),\
+            'Expected equal dimensions for output of functionals. '
+        l = Lambda(
+            lambda x: K.reshape(tf.math.reduce_sum(x*fr, list(range(1, len(fl.shape)))), [-1, 1])
+        )
         l.name = "dot/" + l.name.split("_")[-1]
+        res.outputs += [l(fl)]
 
-    # res.append_to_layers(lmbd)
-    res.outputs = _apply_operation(lmbd, res, other)
     return res
 
 
-def diag(f):
-    """Diag operation returns diagonal of outputs of (None,N,N) functional.
+def diag_part(f):
+    """Diag_part operation returns diagonal part of outputs of (None,N,N) functional.
 
     # Arguments
         f: Functional object.
@@ -273,19 +275,44 @@ def diag(f):
 
     res = f.copy()
     lmbd = []
+    outputs = []
     for o in f.outputs:
         assert len(o.shape) == 3, \
             'Exptected output dimension to be (None, N, N)'
         dim = o.shape[-1]
-        lmbd += [
-            Lambda(lambda x: K.concatenate([K.reshape(x[:, i, i], (-1, 1)) for i in range(dim)], axis=-1))
-        ]
+        l = Lambda(lambda x: tf.linalg.diag_part(x))
+        l.name = "diag_part_" + l.name.split("_")[-1]
+        lmbd += [l]
+        outputs += [l(o)]
 
-    res.outputs = []
-    for l, o in zip(lmbd, f.outputs):
-        l.name = "diag/" + l.name.split("_")[-1]
-        res.outputs += [l(o)]
+    res.outputs = outputs
+    return res
 
+
+def diag(f):
+    """Diag operation converts a vector output (None, N) to a matrix form of (None,N,N) functional.
+
+    # Arguments
+        f: Functional object.
+
+    # Returns
+        A Functional.
+    """
+    validate_functional(f)
+
+    res = f.copy()
+    lmbd = []
+    outputs = []
+    for o in f.outputs:
+        assert len(o.shape) == 2, \
+            'Exptected output dimension to be (None, N)'
+        dim = o.shape[-1]
+        l = Lambda(lambda x: tf.linalg.diag(x))
+        l.name = "diag_" + l.name.split("_")[-1]
+        lmbd += [l]
+        outputs += [l(o)]
+
+    res.outputs = outputs
     return res
 
 
@@ -650,7 +677,7 @@ def _gradients(ys, xs, order=1):
             new_shape = [x if x is not None else -1 for x in ds[-1].shape + (1,)]
             ds[-1] = K.reshape(ds[-1], new_shape)
         # The output is a tensor.
-        ds = K.concatenate([y[:,i:i+1,0] for i, y in enumerate(ds)], -1)
+        ds = K.concatenate(ds, -1)
     return ds
 
 
@@ -671,29 +698,8 @@ def _diag_gradients(ys, xs, order=1):
         'Supported when X and Y has the same dimensions - ' + \
         'Xs:{}, Ys:{}'.format(xs.shape.as_list(), ys.shape.as_list())
 
-    y_ids = tuple([slice(None, None) if x is None else x for x in ys.shape.as_list()])
-    ds = []
-    for j in range(y_ids[-1]):
-        ds.append(ys[y_ids[:-1] + (j,)])
-        for i in range(order):
-            ds[-1] = unpack_singleton(
-                tf.gradients(
-                    ds[-1], xs,
-                    unconnected_gradients='zero',
-                    # colocate_gradients_with_ops=True, TF: V1.14.0
-                )
-            )
-        ds[-1] = ds[-1][y_ids[:-1] + (j,)]
-        # check the output shape.
-        if ds[-1].shape.as_list() in ([None, ], [None, 1]):
-            new_shape = [-1, 1]
-        else:
-            raise NotImplementedError
-        ds[-1] = K.reshape(ds[-1], new_shape)
-    # The output is a tensor.
-    ds = K.concatenate(ds, -1)
-
-    return ds
+    ds = _gradients(ys, xs, order)
+    return tf.linalg.diag_part(ds)
 
 
 def _div_gradients(ys, xs, order=1):
@@ -713,32 +719,8 @@ def _div_gradients(ys, xs, order=1):
         'Supported when X and Y has the same dimensions - ' + \
         'Xs:{}, Ys:{}'.format(xs.shape.as_list(), ys.shape.as_list())
 
-    y_ids = tuple([slice(None, None) if x is None else x for x in ys.shape.as_list()])
-    res = None
-    for j in range(y_ids[-1]):
-        ds = ys[y_ids[:-1] + (j,)]
-        for i in range(order):
-            ds = unpack_singleton(
-                tf.gradients(
-                    ds, xs,
-                    unconnected_gradients='zero',
-                    # colocate_gradients_with_ops=True, TF: V1.14.0
-                )
-            )
-        ds = ds[y_ids[:-1] + (j,)]
-        # check the output shape.
-        if ds.shape.as_list() in ([None, ], [None, 1]):
-            new_shape = [-1, 1]
-        else:
-            raise NotImplementedError
-        # add outputs.
-        if res is None:
-            res = K.reshape(ds, new_shape)
-        else:
-            res += K.reshape(ds, new_shape)
-
-    return res
-
+    ds = _diag_gradients(ys, xs, order)
+    return tf.math.reduce_sum(ds, [1], keepdims=True)
 
 
 def _lambda_gradient(ys, xs, order=1, gtype='Grad', name=''):
