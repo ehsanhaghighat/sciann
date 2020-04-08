@@ -70,9 +70,9 @@ class RNNFunctional(object):
             K.set_floatx(dtype)
         # check for copy constructor.
         if all([x in kwargs for x in ('inputs', 'outputs', 'layers')]):
-            self._inputs = kwargs['inputs']
-            self._outputs = kwargs['outputs']
-            self._layers = kwargs['layers']
+            self._inputs = kwargs['inputs'].copy()
+            self._outputs = kwargs['outputs'].copy()
+            self._layers = kwargs['layers'].copy()
             return
         # prepares fields.
         fields = to_list(fields)

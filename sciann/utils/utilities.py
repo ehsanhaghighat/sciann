@@ -23,6 +23,10 @@ from keras.initializers import random_uniform as default_bias_initializer
 from keras.initializers import glorot_normal as default_kernel_initializer
 
 
+def _is_tf_1():
+    return tf.__version__.startswith('1.')
+
+
 def get_activation(activation):
     """ Evaluates the activation function from a string or list of string inputs.
 
@@ -58,3 +62,30 @@ def get_activation(activation):
             'Please provide a valid input: ' + type(activation) +
             ' - Expecting a function name or function handle. '
         )
+
+
+def set_random_seed(val=1234):
+    """ Set random seed for reproducibility.
+
+    # Arguments
+        val: A seed value..
+
+    """
+    np.random.seed(val)
+    if _is_tf_1():
+        tf.set_random_seed(val)
+    else:
+        tf.random.set_seed(val)
+
+
+def clear_tf_session():
+    """ Clear keras and tensorflow sessions.
+    """
+    if _is_tf_1():
+        K.clear_session()
+    else:
+        tf.keras.backend.clear_session()
+
+
+
+

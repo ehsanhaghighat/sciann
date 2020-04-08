@@ -69,9 +69,9 @@ class Functional(object):
             K.set_floatx(dtype)
         # check for copy constructor.
         if all([x in kwargs for x in ('inputs', 'outputs', 'layers')]):
-            self._inputs = kwargs['inputs']
-            self._outputs = kwargs['outputs']
-            self._layers = kwargs['layers']
+            self._inputs = kwargs['inputs'].copy()
+            self._outputs = kwargs['outputs'].copy()
+            self._layers = kwargs['layers'].copy()
             return
         # prepares fields.
         fields = to_list(fields)
@@ -243,14 +243,14 @@ class Functional(object):
         if self.layers is not layers:
             cl = [x.name for x in self.layers]
             for x in layers:
-                if x.name in cl is not True:
+                if not x.name in cl:
                     self.layers += [x]
 
     def append_to_inputs(self, inputs):
         if self.inputs is not inputs:
             cl = [x.name for x in self.inputs]
             for x in inputs:
-                if x.name in cl is not True:
+                if not x.name in cl:
                     self.inputs.append(x)
 
     def append_to_outputs(self, outputs):
