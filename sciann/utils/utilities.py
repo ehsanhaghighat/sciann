@@ -21,6 +21,7 @@ from keras.utils.generic_utils import unpack_singleton
 from keras.utils import plot_model
 from keras.initializers import random_uniform as default_bias_initializer
 from keras.initializers import glorot_normal as default_kernel_initializer
+from keras.initializers import Constant as default_constant_initializer
 
 
 def _is_tf_1():
@@ -87,5 +88,22 @@ def clear_tf_session():
         tf.keras.backend.clear_session()
 
 
+def is_same_tensor(x, y):
+    if len(to_list(x)) != len(to_list(y)):
+        return False
+    else:
+        res = []
+        for xi, yi in zip(to_list(x), to_list(y)):
+            res.append(xi.name == yi.name)
+        return all(res)
 
 
+def unique_tensors(Xs):
+    if len(Xs) > 1:
+        ux, uids = np.unique([x.name for x in Xs], return_index=True)
+        uids = sorted(uids)
+        return [Xs[i] for i in uids]
+    else:
+        return Xs
+    
+    

@@ -316,3 +316,7 @@ class RNNFunctional(object):
 
     def diff(self, *args, **kwargs):
         return math.diff(self, *args, **kwargs)
+
+    @classmethod
+    def get_class(cls):
+        return RNNFunctional

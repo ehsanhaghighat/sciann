@@ -19,11 +19,9 @@ def find_neighbors(*args, **kwargs):
     """
     if len(args)==2:
         xs = args[0]
-        ys = None
         size_rb = args[1]
     elif len(args)==3:
-        xs = args[0]
-        ys = args[1]
+        xs = [args[0], args[1]]
         size_rb = args[2]
     else:
         raise ValueError
@@ -40,9 +38,5 @@ def find_neighbors(*args, **kwargs):
     if 'return_ids' in kwargs and kwargs['return_ids']:
         return ids
     else:
-        xrbs = [x[ids].reshape(-1, size_rb) for x in xs]
-        if ys is None:
-            return xrbs
-        else:
-            yrbs = [y[ids].reshape(-1, size_rb) for y in ys]
-            return xrbs, yrbs
+        return [x[ids].reshape(-1, size_rb) for x in xs]
+

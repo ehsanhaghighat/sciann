@@ -274,10 +274,11 @@ class SciModel(object):
                     " with `epochs` and `learning rates`"
                 )
             if stop_after is None:
-                stop_after = epochs
+                stop_after = max([10, epochs/10])
             callbacks += [
-                k.callbacks.EarlyStopping(monitor="loss", mode='auto', verbose=1, patience=stop_after),
-                k.callbacks.TerminateOnNaN(),
+                k.callbacks.EarlyStopping(monitor="loss", mode='auto', verbose=1,
+                                          patience=stop_after, min_delta=1.0e-12),
+                k.callbacks.TerminateOnNaN()
             ]
         # prepare X,Y data.
         x_true = to_list(x_true)
@@ -474,15 +475,20 @@ class SciModel(object):
             ValueError if anything other than "mse" or "mae" is passed.
         """
         if method in ("mse", "mean_squared_error"):
-            return lambda y_true, y_pred: K.mean(K.square(y_true - y_pred))
+            return lambda y_true, y_pred: K.mean(K.square(y_true - y_pred), axis=-1)
         elif method in ("mae", "mean_absolute_error"):
-            return lambda y_true, y_pred: K.mean(K.abs(y_true - y_pred))
+            return lambda y_true, y_pred: K.mean(K.abs(y_true - y_pred), axis=-1)
         elif method in ("se", "squared_error"):
-            return lambda y_true, y_pred: K.sum(K.square(y_true - y_pred))
+            return lambda y_true, y_pred: K.sum(K.square(y_true - y_pred), axis=-1)
         elif method in ("ae", "absolute_error"):
-            return lambda y_true, y_pred: K.sum(K.abs(y_true - y_pred))
+            return lambda y_true, y_pred: K.sum(K.abs(y_true - y_pred), axis=-1)
+        elif hasattr(k.losses, method):
+            return getattr(k.losses, method)
         else:
-            raise ValueError
+            raise ValueError(
+                'Supported losses: Keras loss function or (mse, mae, se, ae)'
+            )
+
 
     @staticmethod
     def _prepare_data(cond_outputs, y_true, global_weights, num_sample, default_zero_weight):
@@ -501,7 +507,7 @@ class SciModel(object):
                     adjusted_yt = yt[1]
                     adjusted_ids = np.ones(num_sample, dtype=bool)
                     adjusted_ids[ids] = False
-                    adjusted_yt[adjusted_ids, :] *= 1.0e-3
+                    adjusted_yt[adjusted_ids, :] *= 0.0
                 else:
                     raise ValueError(
                         'Error in size of the target {}.'.format(i)
@@ -533,9 +539,9 @@ class SciModel(object):
                             'Dimension of expected `y_true` does not match with defined `Constraint`'
                         )
             elif isinstance(ys[-1], str):
-                if ys[-1] == 'zeros':
+                if ys[-1] == 'zero' or ys[-1] == 'zeros':
                     ys[-1] = np.zeros((num_sample, ) + k.backend.int_shape(yc)[1:])
-                elif ys[-1] == 'ones':
+                elif ys[-1] == 'one' or ys[-1] == 'ones':
                     ys[-1] = np.ones((num_sample, ) + k.backend.int_shape(yc)[1:])
                 else:
                     raise ValueError(

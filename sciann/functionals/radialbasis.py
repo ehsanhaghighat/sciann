@@ -61,6 +61,10 @@ class RadialBasis(Functional):
             outputs=outputs
         )
 
+    @classmethod
+    def get_class(cls):
+        return Functional
+
 
 class RadialBasisBase(Functional):
     """ Configures the `RadialBasisBase` object for the network's input.
@@ -106,3 +110,7 @@ class RadialBasisBase(Functional):
             inputs=to_list(layer.input),
             outputs=to_list(layer.output),
         )
+
+    @classmethod
+    def get_class(cls):
+        return Functional

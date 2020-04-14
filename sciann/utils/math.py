@@ -27,7 +27,6 @@ def pow(f, a):
     """
     validate_functional(f)
 
-    res = f.copy()
     lmbd = [Lambda(lambda x: x**a) for X in f.outputs]
     for l in lmbd:
         if isinstance(a, int):
@@ -38,8 +37,14 @@ def pow(f, a):
             raise ValueError(
                 'Expected an `int` or `float` for a in x^a. '
             )
-    # res.append_to_layers(lmbd)
-    res.outputs = _apply_operation(lmbd, res)
+
+    Functional = f.get_class()
+    res = Functional(
+        inputs = unique_tensors(f.inputs.copy()),
+        outputs = _apply_operation(lmbd, f),
+        layers = lmbd,
+    )
+
     return res
 
 
@@ -55,18 +60,23 @@ def add(f, other):
     """
     validate_functional(f)
 
-    res = f.copy()
+    inputs = f.inputs.copy()
     if is_functional(other):
-        res.append_to_inputs(other.inputs)
-        res.append_to_layers(other.layers)
+        inputs += to_list(other.inputs)
         lmbd = [Lambda(lambda x: x[0]+x[1]) for X in f.outputs]
     else:
+        _warn_for_ndarray(other)
         lmbd = [Lambda(lambda x: x+other) for X in f.outputs]
 
     for l in lmbd:
         l.name = "add/" + l.name.split("_")[-1]
-    # res.append_to_layers(lmbd)
-    res.outputs = _apply_operation(lmbd, res, other)
+        
+    Functional = f.get_class()
+    res = Functional(
+        inputs = unique_tensors(inputs),
+        outputs = _apply_operation(lmbd, f, other),
+        layers = lmbd
+    )
     return res
 
 
@@ -95,18 +105,23 @@ def sub(f, other):
     """
     validate_functional(f)
 
-    res = f.copy()
+    inputs = f.inputs.copy()
     if is_functional(other):
-        res.append_to_inputs(other.inputs)
-        res.append_to_layers(other.layers)
+        inputs += to_list(other.inputs)
         lmbd = [Lambda(lambda x: x[0]-x[1]) for X in f.outputs]
     else:
+        _warn_for_ndarray(other)
         lmbd = [Lambda(lambda x: x-other) for X in f.outputs]
 
     for l in lmbd:
         l.name = "sub/" + l.name.split("_")[-1]
-    # res.append_to_layers(lmbd)
-    res.outputs = _apply_operation(lmbd, res, other)
+    
+    Functional = f.get_class()
+    res = Functional(
+        inputs = unique_tensors(inputs),
+        outputs = _apply_operation(lmbd, f, other),
+        layers = lmbd
+    )
     return res
 
 
@@ -122,18 +137,23 @@ def rsub(f, other):
     """
     validate_functional(f)
 
-    res = f.copy()
+    inputs = f.inputs.copy()
     if is_functional(other):
-        res.append_to_inputs(other.inputs)
-        res.append_to_layers(other.layers)
+        inputs += to_list(other.inputs)
         lmbd = [Lambda(lambda x: x[1]-x[0]) for X in f.outputs]
     else:
+        _warn_for_ndarray(other)
         lmbd = [Lambda(lambda x: other-x) for X in f.outputs]
 
     for l in lmbd:
         l.name = "rsub/" + l.name.split("_")[-1]
-    # res.append_to_layers(lmbd)
-    res.outputs = _apply_operation(lmbd, res, other)
+    
+    Functional = f.get_class()
+    res = Functional(
+        inputs = unique_tensors(inputs),
+        outputs = _apply_operation(lmbd, f, other),
+        layers = lmbd
+    )
     return res
 
 
@@ -149,19 +169,23 @@ def mul(f, other):
     """
     validate_functional(f)
 
-    res = f.copy()
+    inputs = f.inputs.copy()
     if is_functional(other):
-        res.append_to_inputs(other.inputs)
-        res.append_to_layers(other.layers)
+        inputs += to_list(other.inputs)
         lmbd = [Lambda(lambda x: x[0]*x[1]) for X in f.outputs]
     else:
+        _warn_for_ndarray(other)
         lmbd = [Lambda(lambda x: x*other) for X in f.outputs]
 
     for l in lmbd:
         l.name = "mul/" + l.name.split("_")[-1]
 
-    # res.append_to_layers(lmbd)
-    res.outputs = _apply_operation(lmbd, res, other)
+    Functional = f.get_class()
+    res = Functional(
+        inputs = unique_tensors(inputs),
+        outputs = _apply_operation(lmbd, f, other),
+        layers = lmbd
+    )
     return res
 
 
@@ -190,18 +214,23 @@ def div(f, other):
     """
     validate_functional(f)
 
-    res = f.copy()
+    inputs = f.inputs.copy()
     if is_functional(other):
-        res.append_to_inputs(other.inputs)
-        res.append_to_layers(other.layers)
+        inputs += to_list(other.inputs)
         lmbd = [Lambda(lambda x: x[0]/x[1]) for X in f.outputs]
     else:
+        _warn_for_ndarray(other)
         lmbd = [Lambda(lambda x: x/other) for X in f.outputs]
 
     for l in lmbd:
         l.name = "div/" + l.name.split("_")[-1]
-    # res.append_to_layers(lmbd)
-    res.outputs = _apply_operation(lmbd, res, other)
+    
+    Functional = f.get_class()
+    res = Functional(
+        inputs = unique_tensors(inputs),
+        outputs = _apply_operation(lmbd, f, other),
+        layers = lmbd
+    )
     return res
 
 
@@ -217,18 +246,23 @@ def rdiv(f, other):
     """
     validate_functional(f)
 
-    res = f.copy()
+    inputs = f.inputs.copy()
     if is_functional(other):
-        res.append_to_inputs(other.inputs)
-        res.append_to_layers(other.layers)
+        inputs += to_list(other.inputs)
         lmbd = [Lambda(lambda x: x[1]/x[0]) for X in f.outputs]
     else:
+        _warn_for_ndarray(other)
         lmbd = [Lambda(lambda x: other/x) for X in f.outputs]
 
     for l in lmbd:
         l.name = "rdiv/" + l.name.split("_")[-1]
-    # res.append_to_layers(lmbd)
-    res.outputs = _apply_operation(lmbd, res, other)
+    
+    Functional = f.get_class()
+    res = Functional(
+        inputs = unique_tensors(inputs),
+        outputs = _apply_operation(lmbd, f, other),
+        layers = lmbd
+    )
     return res
 
 
@@ -246,10 +280,8 @@ def dot(f, other):
     validate_functional(other)
     assert len(f.outputs) == len(other.outputs)
 
-    res = f.copy()
-    res.append_to_inputs(other.inputs)
-    res.append_to_layers(other.layers)
-    res.outputs = []
+    outputs = []
+    layers = []
     for fl, fr in zip(f.outputs, other.outputs):
         assert fl.shape.as_list() == fr.shape.as_list(),\
             'Expected equal dimensions for output of functionals. '
@@ -257,8 +289,16 @@ def dot(f, other):
             lambda x: K.reshape(tf.math.reduce_sum(x*fr, list(range(1, len(fl.shape)))), [-1, 1])
         )
         l.name = "dot/" + l.name.split("_")[-1]
-        res.outputs += [l(fl)]
-
+        layers += [l]
+        outputs += [l(fl)]
+        
+    inputs = to_list(f.inputs) + to_list(other.inputs)
+    Functional = f.get_class()
+    res = Functional(
+        inputs = unique_tensors(inputs),
+        outputs = outputs,
+        layers = layers
+    )
     return res
 
 
@@ -273,7 +313,6 @@ def diag_part(f):
     """
     validate_functional(f)
 
-    res = f.copy()
     lmbd = []
     outputs = []
     for o in f.outputs:
@@ -285,7 +324,12 @@ def diag_part(f):
         lmbd += [l]
         outputs += [l(o)]
 
-    res.outputs = outputs
+    Functional = f.get_class()
+    res = Functional(
+        inputs = f.inputs.copy(),
+        outputs = outputs,
+        layers = lmbd
+    )
     return res
 
 
@@ -300,7 +344,6 @@ def diag(f):
     """
     validate_functional(f)
 
-    res = f.copy()
     lmbd = []
     outputs = []
     for o in f.outputs:
@@ -312,7 +355,12 @@ def diag(f):
         lmbd += [l]
         outputs += [l(o)]
 
-    res.outputs = outputs
+    Functional = f.get_class()
+    res = Functional(
+        inputs = f.inputs.copy(),
+        outputs = outputs,
+        layers = lmbd
+    )
     return res
 
 
@@ -597,14 +645,18 @@ def _apply_function(x, fname, **kwargs):
         A new functional object.
     """
     validate_functional(x)
-    res = x.copy()
 
     fun = get_activation(fname)
     lmbd = [Lambda(lambda x: fun(x, **kwargs)) for X in x.outputs]
     for l in lmbd:
         l.name = "{}/".format(fname) + l.name.split("_")[-1]
-    # res.append_to_layers(lmbd)
-    res.outputs = _apply_operation(lmbd, x)
+        
+    Functional = x.get_class()
+    res = Functional(
+        inputs = x.inputs.copy(),
+        outputs = _apply_operation(lmbd, x),
+        layers = lmbd
+    )
     return res
 
 
@@ -618,8 +670,7 @@ def getitem(x, item):
         A new functional object.
     """
     validate_functional(x)
-    res = x.copy()
-
+    
     itms = (slice(None, None, None),)
     if isinstance(item, tuple):
         itms += item
@@ -633,7 +684,12 @@ def getitem(x, item):
         l.name = "slice/" + l.name.split("_")[-1]
         ys.append(l(y))
 
-    res.outputs = ys
+    Functional = x.get_class()
+    res = Functional(
+        inputs = x.inputs.copy(),
+        outputs = ys,
+        layers = lmbd
+    )
     return res
 
 
@@ -662,10 +718,10 @@ def _gradients(ys, xs, order=1):
             )
 
     else:
-        y_ids = tuple([slice(None,None) if x is None else x for x in ys.shape.as_list()])
+        splitted_ys = tf.split(ys, num_or_size_splits=ys.shape[-1], axis=-1)
         ds = []
-        for j in range(y_ids[-1]):
-            ds.append(ys[y_ids[:-1] + (j,)])
+        for j, y in enumerate(splitted_ys):
+            ds.append(y)
             for i in range(order):
                 ds[-1] = unpack_singleton(
                     tf.gradients(
@@ -700,6 +756,42 @@ def _diag_gradients(ys, xs, order=1):
 
     ds = _gradients(ys, xs, order)
     return tf.linalg.diag_part(ds)
+
+
+def _diag_gradients2(ys, xs, order=1):
+    """Returns the gradients of y in `ys` w.r.t. x in `xs`.
+
+    `ys` and `xs` are each a Tensor or a list of tensors.
+
+    # Arguments
+        ys: A tensor or list of tesnors to be differentiated.
+        xs: A tensor or list of tensors to be used for differentiation.
+        order: Order of differentiation.
+
+    # Returns
+        A list of `D^n y / Dx^n` for each y and x in `ys` and `xs`.
+    """
+    assert ys.shape.as_list() == xs.shape.as_list(), \
+        'Supported when X and Y has the same dimensions - ' + \
+        'Xs:{}, Ys:{}'.format(xs.shape.as_list(), ys.shape.as_list())
+
+    splitted_ys = tf.split(ys, num_or_size_splits=ys.shape[-1], axis=-1)
+    ds = []
+    for j, y in enumerate(splitted_ys):
+        ds.append(y)
+        for i in range(order):
+            ds[-1] = unpack_singleton(
+                tf.gradients(
+                    ds[-1], xs,
+                    unconnected_gradients='zero',
+                    # colocate_gradients_with_ops=True, TF: V1.14.0
+                )
+            )
+            
+        ds[-1] = ds[-1][:, j:j+1]
+    # The output is a tensor.
+    ds = K.concatenate(ds, -1)
+    return ds
 
 
 def _div_gradients(ys, xs, order=1):
@@ -791,6 +883,7 @@ def _gdiff(gtype, f, *args, **kwargs):
         )
 
     try:
+        inputs = f.inputs.copy()
         if len(args) == 0:
             x = unpack_singleton(f.inputs)
             assert is_tensor(x), \
@@ -802,6 +895,7 @@ def _gdiff(gtype, f, *args, **kwargs):
                 x_name = args[x_id]
                 x = next(l for l in f.layers if l.name == x_name).output
             elif is_functional(args[x_id]):
+                inputs += to_list(args[x_id].inputs)
                 x_lay = args[x_id].layers[-1]
                 x_name = x_lay.name
                 x = x_lay.output
@@ -832,16 +926,18 @@ def _gdiff(gtype, f, *args, **kwargs):
     order = 1
     if 'order' in kwargs.keys():
         order = kwargs['order']
-
-    res = f.copy()
     
     lay, tens = _lambda_gradient(
         y, x, order, gtype, "{}_{}".format(y_name, x_name)
     )
-
-    res.append_to_layers(to_list(lay))
-    res.outputs = to_list(tens)
-
+    
+    Functional = type(f)
+    res = Functional(
+        inputs = unique_tensors(inputs),
+        outputs = to_list(tens),
+        layers = to_list(lay)
+    )
+    
     return res
 
 
@@ -943,3 +1039,13 @@ def radial_basis2(xs, ci, radii):
     d /= radii
     
     return exp(-sum([(x - c)**2 for x, c in zip(xs, ci)])/radii**2)
+
+
+def _warn_for_ndarray(other):
+    if isinstance(other, np.ndarray):
+        Warning(
+            'Expecting `Tensor` objects instead of `ndarray`: ' +
+            'Note data should go to the training process and ' +
+            'this operation may break batch training. '
+        )
+

@@ -51,3 +51,7 @@ class RNNVariable(RNNFunctional):
             inputs=to_list(layer.input),
             outputs=to_list(layer.output),
         )
+
+    @classmethod
+    def get_class(cls):
+        return RNNFunctional

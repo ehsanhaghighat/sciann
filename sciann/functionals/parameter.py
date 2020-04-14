@@ -14,6 +14,7 @@ from keras.layers import InputSpec
 from keras.constraints import MinMaxNorm
 
 from ..utils import to_list
+from ..utils import default_constant_initializer
 
 from .functional import Functional
 from .variable import Variable
@@ -74,6 +75,10 @@ class Parameter(Functional):
             layers=to_list(layers)
         )
 
+    @classmethod
+    def get_class(cls):
+        return Functional
+
 
 class ParameterBase(Dense):
     """ Base Parameter class to be used for parameter inversion.
@@ -101,7 +106,7 @@ class ParameterBase(Dense):
             units=1,
             use_bias=True,
             kernel_initializer='zeros',
-            bias_initializer=k.initializers.constant(val),
+            bias_initializer=default_constant_initializer(val),
             kernel_regularizer=None,
             bias_regularizer=None,
             activity_regularizer=None,

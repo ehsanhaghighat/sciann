@@ -10,9 +10,10 @@ import keras.backend as K
 from keras.layers import Dense
 from keras.layers import Activation
 from keras.layers import Concatenate
+from keras.models import Model
 
-from ..utils import to_list, unpack_singleton
-from ..utils import default_bias_initializer, default_kernel_initializer
+from ..utils import to_list, unpack_singleton, is_same_tensor, unique_tensors
+from ..utils import default_bias_initializer, default_kernel_initializer, default_constant_initializer
 from ..utils import validations, get_activation, getitem
 from ..utils import floatx, set_floatx
 from ..utils import math
@@ -72,7 +73,13 @@ class Functional(object):
             self._inputs = kwargs['inputs'].copy()
             self._outputs = kwargs['outputs'].copy()
             self._layers = kwargs['layers'].copy()
+            self._set_model()
             return
+        # prepare initializers. 
+        if isinstance(kernel_initializer, (float, int)):
+            kernel_initializer = default_constant_initializer(kernel_initializer)
+        if isinstance(bias_initializer, (float, int)):
+            bias_initializer = default_constant_initializer(bias_initializer)
         # prepares fields.
         fields = to_list(fields)
         if all([isinstance(fld, str) for fld in fields]):
@@ -100,9 +107,9 @@ class Functional(object):
         if all([isinstance(var, Functional) for var in variables]):
             for var in variables:
                 inputs += var.outputs
-            for var in variables:
-                for lay in var.layers:
-                    layers.append(lay)
+            # for var in variables:
+            #     for lay in var.layers:
+            #         layers.append(lay)
         else:
             raise TypeError(
                 "Input error: Please provide a `list` of `Functional`s. \n"
@@ -177,15 +184,47 @@ class Functional(object):
         self._inputs = inputs
         self._outputs = outputs
         self._layers = layers
+        self._set_model()
 
-    def eval(self, model, mesh):
-        assert validations.is_scimodel(model), \
-            'Expected a SciModel object. '
+    def eval(self, *kwargs):
+        """ Evaluates the functional object for a given input.
+
+        # Arguments
+            (SciModel, Xs): 
+                Evalutes the functional object from the beginning 
+                    of the graph defined with SciModel. 
+                    The Xs should match those of SciModel. 
+            
+            (Xs):
+                Evaluates the functional object from inputs of the functional. 
+                    Xs should match those of inputs to the functional. 
+                    
+        # Returns
+            Numpy array of dimensions of network outputs. 
+
+        # Raises
+            ValueError:
+            TypeError:
+        """
+        if len(kwargs) == 1:
+            model = self.model
+            # read data.
+            mesh = kwargs[0]
+        elif len(kwargs) == 2:
+            if validations.is_scimodel(kwargs[0]):
+                model = K.function(kwargs[0].model.inputs, self.outputs)
+            else:
+                raise ValueError(
+                    'Expected a SciModel object for the first arg. '
+                )
+            mesh = kwargs[1]
+        else:
+            raise NotImplemented()
         x_pred = to_list(mesh)
         # To have unified output for postprocessing - limitted support.
         shape_default = x_pred[0].shape if all([x.shape==x_pred[0].shape for x in x_pred]) else None
         # prepare X,Y data.
-        for i, (x, xt) in enumerate(zip(x_pred, model._model.inputs)):
+        for i, (x, xt) in enumerate(zip(x_pred, model.inputs)):
             x_shape = tuple(xt.get_shape().as_list())
             if x.shape != x_shape:
                 try:
@@ -198,7 +237,7 @@ class Functional(object):
                     )
                     assert False
 
-        y_pred = to_list(K.function(model._model.inputs, self._outputs)(x_pred))
+        y_pred = to_list(model(x_pred))
 
         if shape_default is not None:
             try:
@@ -232,6 +271,36 @@ class Functional(object):
     def outputs(self, value):
         self._outputs = value
 
+    @property
+    def model(self):
+        self._set_model()
+        return self._model
+    
+    def _set_model(self):
+        if hasattr(self, '_model'):
+            if is_same_tensor(self._inputs, self._model.inputs) and \
+               is_same_tensor(self._outputs, self._model.outputs):
+               return
+        self._model = K.function(
+            unique_tensors(self._inputs),
+            self._outputs
+        )
+
+    def get_weights(self, at_layer=None):
+        return [l.get_weights() for l in self.layers]
+
+    def set_weights(self, weights):
+        try:
+            for l, w in zip(self.layers, weights):
+                l.set_weights(w)
+        except:
+            raise ValueError(
+                'Provide data exactly the same as .get_weights() outputs. '
+            )
+
+    def count_params(self):
+        return sum([l.count_params() for l in self.layers])
+
     def copy(self):
         return Functional(
             inputs=self.inputs,
@@ -254,7 +323,7 @@ class Functional(object):
                     self.inputs.append(x)
 
     def append_to_outputs(self, outputs):
-        self.outputs = self.outputs + outputs
+        self._outputs += to_list(outputs)
 
     def set_trainable(self, val):
         if isinstance(val, bool):
@@ -269,7 +338,7 @@ class Functional(object):
 
         # Returns
             (f1, f2, ...): Tuple of splitted `Functional` objects
-                associated to cheach outputs.
+                associated to each output.
         """
         if len(self._outputs)==1:
             return self
@@ -329,3 +398,7 @@ class Functional(object):
 
     def diff(self, *args, **kwargs):
         return math.diff(self, *args, **kwargs)
+
+    @classmethod
+    def get_class(cls):
+        return Functional
