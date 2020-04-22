@@ -5,7 +5,7 @@ pyyaml
 h5py
 sklearn
 tensorflow>=1.14.0
-keras>=2.2.4
+keras>=2.3.0
 
 [tests]
 pytest
