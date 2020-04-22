@@ -331,6 +331,15 @@ class Functional(object):
                 l.trainable = val
         else:
             raise ValueError('Expected a boolean value: True or False')
+        return self
+
+    def reinitialize_weights(self):
+        for lay in self.layers:
+            if hasattr(lay, 'kernel_initializer') and lay.kernel is not None:
+                K.set_value(lay.kernel, lay.kernel_initializer(lay.kernel.shape))
+            if hasattr(lay, 'bias_initializer') and lay.bias is not None:
+                K.set_value(lay.bias, lay.bias_initializer(lay.bias.shape))
+        return self
 
     def split(self):
         """ In the case of `Functional` with multiple outputs,
