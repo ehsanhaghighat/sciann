@@ -500,18 +500,17 @@ class SciModel(object):
             yc = cond_outputs[i]
             if isinstance(yt, tuple) and len(yt) == 2:
                 ids = yt[0].flatten()
-                if ids.size == yt[1].shape[0] and ids.size < num_sample:
-                    adjusted_yt = np.zeros((num_sample,)+yt[1].shape[1:])
-                    adjusted_yt[ids, :] = yt[1]
-                elif yt[1].shape[0] == num_sample:
+                if isinstance(yt[1], np.ndarray):
                     adjusted_yt = yt[1]
-                    adjusted_ids = np.ones(num_sample, dtype=bool)
-                    adjusted_ids[ids] = False
-                    adjusted_yt[adjusted_ids, :] *= 0.0
+                    if ids.size == yt[1].shape[0] and ids.size < num_sample:
+                        adjusted_yt = np.zeros((num_sample,)+yt[1].shape[1:])
+                        adjusted_yt[ids, :] = yt[1]
+                    elif yt[1].shape[0] != num_sample:
+                        raise ValueError(
+                            'Error in size of the target {}.'.format(i)
+                        )
                 else:
-                    raise ValueError(
-                        'Error in size of the target {}.'.format(i)
-                    )
+                    adjusted_yt = yt[1]
                 ys.append(adjusted_yt)
             elif isinstance(yt, (np.ndarray, str, float, int, type(None))):
                 ys.append(yt)
@@ -555,5 +554,10 @@ class SciModel(object):
                 raise ValueError(
                     'Unsupported entry - {} '.format(ys[-1])
                 )
+            # set undefined ids to zeros.
+            if ids.size != num_sample:
+                adjusted_ids = np.ones(num_sample, dtype=bool)
+                adjusted_ids[ids] = False
+                ys[-1][adjusted_ids, :] = 0.0
 
         return ys, weis
