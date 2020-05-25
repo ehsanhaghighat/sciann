@@ -20,6 +20,7 @@ docs/__pycache__/structure.cpython-37.pyc
 docs/sources/CNAME
 docs/sources/constraints.md
 docs/sources/contributing.md
+docs/sources/examples.md
 docs/sources/fields.md
 docs/sources/functionals.md
 docs/sources/index.md
@@ -35,6 +36,7 @@ docs/sources/getting-started/functional-guide.md
 docs/sources/getting-started/scimodel-guide.md
 docs/templates/CNAME
 docs/templates/constraints.md
+docs/templates/examples.md
 docs/templates/fields.md
 docs/templates/functionals.md
 docs/templates/index.md

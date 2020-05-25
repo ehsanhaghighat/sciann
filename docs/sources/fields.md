@@ -12,11 +12,11 @@ Fx = Field(name='Fx', units=10)
 
 ---
 
-<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/field.py#L12)</span>
+<span style="float:right;">[[source]](https://github.com/sciann/sciann/tree/master/sciann/functionals/field.py#L13)</span>
 ### Field
 
 ```python
-sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x7fdd235c6710>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x7fdd1072ec90>, bias_initializer=<keras.initializers.RandomUniform object at 0x7fdd1072ed50>, trainable=True, dtype=None)
+sciann.functionals.field.Field(name=None, units=1, activation=<function linear at 0x7f7ee822f170>, kernel_initializer=<keras.initializers.VarianceScaling object at 0x7f7e789ff210>, bias_initializer=<keras.initializers.RandomUniform object at 0x7f7e789ff310>, kernel_regularizer=None, bias_regularizer=None, trainable=True, dtype=None)
 ```
 
 Configures the `Field` class for the model outputs.
@@ -33,6 +33,12 @@ __Arguments__
     Defaulted to a normal distribution.
 - __bias_initializer__: Initializer for the bias.
     Defaulted to a normal distribution.
+- __kernel_regularizer__: Regularizer for the kernel.
+    By default, it uses l1=0.001 and l2=0.001 regularizations.
+    To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
+- __bias_regularizer__: Regularizer for the bias.
+    By default, it uses l1=0.001 and l2=0.001 regularizations.
+    To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
 - __trainable__: Boolean to activate parameters of the network.
 - __dtype__: data-type of the network parameters, can be
     ('float16', 'float32', 'float64').

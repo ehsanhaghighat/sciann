@@ -22,6 +22,7 @@ from keras.utils import plot_model
 from keras.initializers import random_uniform as default_bias_initializer
 from keras.initializers import glorot_normal as default_kernel_initializer
 from keras.initializers import Constant as default_constant_initializer
+from keras.regularizers import l1_l2
 
 
 def _is_tf_1():
@@ -105,5 +106,29 @@ def unique_tensors(Xs):
         return [Xs[i] for i in uids]
     else:
         return Xs
-    
-    
+
+
+def default_regularizer(*args, **kwargs):
+    l1, l2 = 0.001, 0.001
+    if len(args) == 1:
+        if isinstance(args[0], (float, int)):
+            l1 = 0.0
+            l2 = args[0]
+        elif isinstance(args[0], list):
+            l1 = args[0][0]
+            l2 = args[0][1]
+        elif isinstance(args[0], dict):
+            l1 = 0.0 if 'l1' not in args[0] else args[0]['l1']
+            l2 = 0.0 if 'l2' not in args[0] else args[0]['l2']
+    elif len(args) == 2:
+        l1 = args[0]
+        l2 = args[1]
+    elif len(kwargs) > 0:
+        l1 = 0.0 if 'l1' not in kwargs else kwargs['l1']
+        l2 = 0.0 if 'l2' not in kwargs else kwargs['l2']
+    else:
+        raise ValueError('Unrecognized entry - input regularization values for l1 and l2.')
+    # print("regularization is used with l1={} and l2={}".format(l1, l2))
+    return l1_l2(l1=l1, l2=l2)
+
+

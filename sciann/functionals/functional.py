@@ -14,6 +14,7 @@ from keras.models import Model
 
 from ..utils import to_list, unpack_singleton, is_same_tensor, unique_tensors
 from ..utils import default_bias_initializer, default_kernel_initializer, default_constant_initializer
+from ..utils import default_regularizer
 from ..utils import validations, get_activation, getitem
 from ..utils import floatx, set_floatx
 from ..utils import math
@@ -41,6 +42,12 @@ class Functional(object):
             Activation function to be applied to the network output.
         kernel_initializer: Initializer of the `Kernel`, from `k.initializers`.
         bias_initializer: Initializer of the `Bias`, from `k.initializers`.
+        kernel_regularizer: Regularizer for the kernel.
+            By default, it uses l1=0.001 and l2=0.001 regularizations.
+            To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
+        bias_regularizer: Regularizer for the bias.
+            By default, it uses l1=0.001 and l2=0.001 regularizations.
+            To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
         dtype: data-type of the network parameters, can be
             ('float16', 'float32', 'float64').
             Note: Only network inputs should be set.
@@ -60,6 +67,8 @@ class Functional(object):
                  output_activation="linear",
                  kernel_initializer=default_kernel_initializer(),
                  bias_initializer=default_bias_initializer(),
+                 kernel_regularizer=None,
+                 bias_regularizer=None,
                  dtype=None,
                  trainable=True,
                  **kwargs):
@@ -75,11 +84,14 @@ class Functional(object):
             self._layers = kwargs['layers'].copy()
             self._set_model()
             return
-        # prepare initializers. 
+        # prepare initializers.
         if isinstance(kernel_initializer, (float, int)):
             kernel_initializer = default_constant_initializer(kernel_initializer)
         if isinstance(bias_initializer, (float, int)):
             bias_initializer = default_constant_initializer(bias_initializer)
+        # prepare regularizers.
+        kernel_regularizer = default_regularizer(kernel_regularizer)
+        bias_regularizer = default_regularizer(bias_regularizer)
         # prepares fields.
         fields = to_list(fields)
         if all([isinstance(fld, str) for fld in fields]):
@@ -89,6 +101,8 @@ class Functional(object):
                     dtype=dtype,
                     kernel_initializer=kernel_initializer,
                     bias_initializer=bias_initializer,
+                    kernel_regularizer=kernel_regularizer,
+                    bias_regularizer=bias_regularizer,
                     trainable=trainable,
                 )
                 for fld in fields
@@ -141,6 +155,8 @@ class Functional(object):
                 nNeuron,
                 kernel_initializer=kernel_initializer,
                 bias_initializer=bias_initializer,
+                kernel_regularizer=kernel_regularizer,
+                bias_regularizer=bias_regularizer,
                 trainable=trainable,
                 dtype=dtype,
             )

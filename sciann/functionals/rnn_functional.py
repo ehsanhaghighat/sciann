@@ -11,6 +11,7 @@ from keras.layers import Activation
 from keras.layers import Concatenate
 
 from ..utils import default_bias_initializer, default_kernel_initializer
+from ..utils import default_regularizer
 from ..utils import to_list, unpack_singleton, get_activation
 from ..utils import validations
 from ..utils import math
@@ -39,6 +40,12 @@ class RNNFunctional(object):
         enrichment: Activation function to be applied to the network output.
         kernel_initializer: Initializer of the `Kernel`, from `k.initializers`.
         bias_initializer: Initializer of the `Bias`, from `k.initializers`.
+        kernel_regularizer: Regularizer for the kernel.
+            By default, it uses l1=0.001 and l2=0.001 regularizations.
+            To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
+        bias_regularizer: Regularizer for the bias.
+            By default, it uses l1=0.001 and l2=0.001 regularizations.
+            To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
         dtype: data-type of the network parameters, can be
             ('float16', 'float32', 'float64').
             Note: Only network inputs should be set.
@@ -60,6 +67,8 @@ class RNNFunctional(object):
                  enrichment="linear",
                  kernel_initializer=default_kernel_initializer(),
                  bias_initializer=default_bias_initializer(),
+                 kernel_regularizer=None,
+                 bias_regularizer=None,
                  dtype=None,
                  trainable=True,
                  **kwargs):
@@ -74,6 +83,9 @@ class RNNFunctional(object):
             self._outputs = kwargs['outputs'].copy()
             self._layers = kwargs['layers'].copy()
             return
+        # prepare regularizers.
+        kernel_regularizer = default_regularizer(kernel_regularizer)
+        bias_regularizer = default_regularizer(bias_regularizer)
         # prepares fields.
         fields = to_list(fields)
         if all([isinstance(fld, str) for fld in fields]):
@@ -83,6 +95,8 @@ class RNNFunctional(object):
                     dtype=dtype,
                     kernel_initializer=kernel_initializer,
                     bias_initializer=bias_initializer,
+                    kernel_regularizer=kernel_regularizer,
+                    bias_regularizer=bias_regularizer,
                     trainable=trainable,
                 )
                 for fld in fields
@@ -144,6 +158,8 @@ class RNNFunctional(object):
                         recurrent_activation=recurrent_activation,
                         kernel_initializer=kernel_initializer,
                         bias_initializer=bias_initializer,
+                        kernel_regularizer=kernel_regularizer,
+                        bias_regularizer=bias_regularizer,
                         trainable=trainable,
                         dtype=dtype,
                         unroll=True,
@@ -154,6 +170,8 @@ class RNNFunctional(object):
                         return_sequences=True,
                         kernel_initializer=kernel_initializer,
                         bias_initializer=bias_initializer,
+                        kernel_regularizer=kernel_regularizer,
+                        bias_regularizer=bias_regularizer,
                         trainable=trainable,
                         dtype=dtype,
                         unroll=True,

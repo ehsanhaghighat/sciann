@@ -15,6 +15,7 @@ from keras.constraints import MinMaxNorm
 
 from ..utils import to_list
 from ..utils import default_constant_initializer
+from ..utils import default_regularizer
 
 from .functional import Functional
 from .variable import Variable

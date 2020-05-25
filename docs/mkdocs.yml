@@ -36,11 +36,21 @@ nav:
 - Getting started:
   - Guide to SciANN model: getting-started/scimodel-guide.md
   - Guide to Functional: getting-started/functional-guide.md
+- Classes:
+  - SciModels: scimodels.md
+  - Functionals: functionals.md
+  - Variables: variables.md
+  - Fields: fields.md
+  - Constraints: constraints.md
+  - Utils: utils.md
 - Examples:
   - Curve fitting in 1D: examples/example-fitting-1d.md
-- SciModels: scimodels.md
-- Functionals: functionals.md
-- Variables: variables.md
-- Fields: fields.md
-- Constraints: constraints.md
-- Utils: utils.md
+- SciANN-Applications on Github:
+  - Github repository: https://github.com/sciann/sciann-applications
+  - Linear and quadratic regression: https://github.com/sciann/sciann-applications/blob/master/SciANN-Linear-Quadratic-Regression/SciANN-Regression.ipynb
+  - Curve fitting in 2D: https://github.com/sciann/sciann-applications/blob/master/SciANN-NN-Regression/SciANN-NN-Regression.ipynb
+  - Physics-Informed Linear elasticity: https://github.com/sciann/sciann-applications/tree/master/SciANN-SolidMechanics
+  - Solving Burgers Shock Equation: https://github.com/sciann/sciann-applications/blob/master/SciANN-BurgersEquation/SciANN-BurgersEquation.ipynb
+  - Physics-Informed Navier-Stokes: https://github.com/sciann/sciann-applications/blob/master/SciANN-NavierStokes/SciANN-NavierStokes.ipynb
+  - Physics-Informed Elasto-Plasticity: https://github.com/sciann/sciann-applications/blob/master/SciANN-ElastoPlasticity/SciANN-ElastoPlasticity.ipynb
+  
