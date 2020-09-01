@@ -2,8 +2,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import keras.backend as K
-from keras.layers import InputLayer
+import tensorflow.python.keras.backend as K
+graph_unique_name = K.get_graph().unique_name
+
+from tensorflow.python.keras.layers import InputLayer
 
 from ..utils import to_list
 from ..utils import Lambda
@@ -42,14 +44,12 @@ class RadialBasis(Functional):
             inputs += v.outputs
             layers += v.layers
 
-        lmbd = [
-            Lambda(lambda x: K.exp(-(x[1] - x[0])**2/radii**2))
-            for i in range(len(vars))
-        ]
-
         outputs = []
-        for i, l in enumerate(lmbd):
-            l.name = "{}/".format('RadialBasis') + l.name.split("_")[-1]
+        for i in range(len(vars)):
+            l = Lambda(
+                lambda x: K.exp(-(x[1] - x[0])**2/radii**2),
+                name = graph_unique_name("{}/".format('RadialBasis'))
+            )
             assert len(vars[i].outputs) == 1
             assert len(rb_vars[i].outputs) == 1
             layers.append(l)

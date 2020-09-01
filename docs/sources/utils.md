@@ -255,7 +255,7 @@ A new functional object.
 
 
 ```python
-sciann.utils.pow(a)
+sciann.utils.pow(b)
 ```
 
 
@@ -263,8 +263,8 @@ Element-wise exponentiation applied to the `Functional` object.
 
 __Arguments__
 
-- __f__: Functional object.
-- __a__: Python integer.
+a, b: pow(a,b)
+Note that at least one of them should be of type Functional.
 
 __Returns__
 

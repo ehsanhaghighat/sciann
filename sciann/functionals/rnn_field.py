@@ -2,8 +2,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from keras.layers import Dense, TimeDistributed
-from keras.activations import linear
+from ..utils import default_bias_initializer, default_kernel_initializer, default_constant_initializer
+from tensorflow.python.keras.layers import Dense, TimeDistributed
+from tensorflow.python.keras.activations import linear
 
 from ..utils import default_bias_initializer, default_kernel_initializer
 from ..utils import default_regularizer
@@ -25,10 +26,8 @@ class RNNField(TimeDistributed):
         bias_initializer: Initializer for the bias.
             Defaulted to a normal distribution.
         kernel_regularizer: Regularizer for the kernel.
-            By default, it uses l1=0.001 and l2=0.001 regularizations.
             To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
         bias_regularizer: Regularizer for the bias.
-            By default, it uses l1=0.001 and l2=0.001 regularizations.
             To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
         trainable: Boolean to activate parameters of the network.
         dtype: data-type of the network parameters, can be
@@ -56,6 +55,11 @@ class RNNField(TimeDistributed):
         assert callable(activation), \
             "Please provide a function handle for the activation. "
 
+        # prepare initializers.
+        if isinstance(kernel_initializer, (float, int)):
+            kernel_initializer = default_constant_initializer(kernel_initializer)
+        if isinstance(bias_initializer, (float, int)):
+            bias_initializer = default_constant_initializer(bias_initializer)
         # prepare regularizers.
         kernel_regularizer = default_regularizer(kernel_regularizer)
         bias_regularizer = default_regularizer(bias_regularizer)

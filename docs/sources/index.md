@@ -10,18 +10,22 @@ Use SciANN if you need a deep learning library that:
 - Allows the use of complex deep neural networks.
 - Takes advantage TensorFlow and Keras features including seamlessly running on CPU and GPU.
 
-Read the documentation at [SicANN.com](https://sciann.com).
+For more details, check out our review paper at [https://arxiv.org/abs/2005.08803](https://arxiv.org/abs/2005.08803) and the documentation at [SciANN.com](https://sciann.com).
 
 
 Cite SciANN in your publications if it helps your research:
 
 ```
-@misc{haghighat2019sciann, 
-    title={SciANN: A Keras wrapper for scientific computations and physics-informed deep learning using artificial neural networks}, 
-    author={Haghighat, Ehsan and Juanes, Ruben}, 
-    howpublished={\url{https://sciann.com}}, 
-    url = {https://github.com/sciann/sciann.git}
-year={2019} 
+@misc{haghighat2020sciann,
+    title={SciANN: A Keras wrapper for scientific computations and 
+           physics-informed deep learning using artificial neural networks},
+    author={Ehsan Haghighat and Ruben Juanes},
+    year={2020},
+    eprint={2005.08803},
+    archivePrefix={arXiv},
+    primaryClass={cs.OH},
+    url = {https://www.sciann.com}
+    howpublished={\url{https://github.com/sciann/sciann.git}}
 }
 ```
 
@@ -75,7 +79,7 @@ You can evaluate the model any time on new data:
 classes = model.predict(x_test, batch_size=128)
 ```
 
-In the [examples folder](https://github.com/sciann/sciann/tree/master/examples) of the repository, you will find some examples of Linear Elasticity, Flow, Flow in Porous Media, etc.
+In the [application folder](https://github.com/sciann/sciann-applications) of the repository, you will find some examples of Linear Elasticity, Flow, Flow in Porous Media, etc.
 
 
 ------------------
@@ -135,6 +139,6 @@ sudo pip install .
 
 Scientific Computational with Artificial Neural Networks.
 
-Scientific computations include solving ODEs, PDEs, Integration, Differentitation, Curve Fitting, etc.  
+Scientific computations include solving ODEs, PDEs, Integration, Differentiation, Curve Fitting, etc.  
 
 ------------------

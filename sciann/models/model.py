@@ -7,12 +7,12 @@ from __future__ import print_function
 
 import os
 
-import keras.backend as K
-import keras as k
+import tensorflow.python.keras.backend as K
+import tensorflow.python.keras as k
 import numpy as np
 
-from keras.models import Model
-from keras.utils import plot_model
+from tensorflow.python.keras.models import Model
+from tensorflow.python.keras.utils.vis_utils import plot_model
 
 from ..utils import unpack_singleton, to_list
 from ..utils import is_variable, is_constraint, is_functional
@@ -198,7 +198,10 @@ class SciModel(object):
               learning_rate=0.001,
               shuffle=True,
               callbacks=None,
+              reduce_lr_after=None,
+              reduce_lr_min_delta=0.001,
               stop_after=None,
+              stop_loss_value=1e-8,
               save_weights_to=None,
               save_weights_freq=0,
               default_zero_weight=0.0,
@@ -232,8 +235,14 @@ class SciModel(object):
             shuffle: Boolean (whether to shuffle the training data).
                 Default value is True.
             callbacks: List of `keras.callbacks.Callback` instances.
-            stop_after: To stop after certain missed epochs.
-                Defaulted to epochs.
+            reduce_lr_after: patience to reduce learning rate or stop after certain missed epochs.
+                Defaulted to epochs max(10, epochs/10).
+            reduce_lr_min_delta: min absolute change in total loss value that is considered a successful change. 
+                Defaulted to 0.001. 
+                This values affects number of failed attempts to trigger reduce learning rate based on reduce_lr_after. 
+            stop_after: To stop after certain missed epochs. Defaulted to total number of epochs.
+            stop_loss_value: The minimum value of the total loss that stops the training automatically. 
+                Defaulted to 1e-8. 
             save_weights_to: (file_path) If you want to save the state of the model (at the end of the training).
             save_weights_freq: (Integer) Save weights every N epcohs.
                 Defaulted to 0.
@@ -249,15 +258,20 @@ class SciModel(object):
             # decay_epochs = epochs if decay_epochs is None else decay_epochs
             # a0 = decay_epochs / (f1-f0)
             # n0 = -a0*f0
+            if reduce_lr_after is None:
+                reduce_lr_after = max([10, epochs/10])
+            if stop_after is None:
+                stop_after = epochs
             callbacks = []
             if isinstance(learning_rate, (type(None), float, int)):
                 lr_rates = 0.001 if learning_rate is None else learning_rate
                 K.set_value(self.model.optimizer.lr, lr_rates)
                 callbacks.append(
-                    k.callbacks.callbacks.ReduceLROnPlateau(
+                    k.callbacks.ReduceLROnPlateau(
                         monitor='loss', factor=0.5,
-                        patience=epochs/10, cooldown=epochs/10,
-                        verbose=1, mode='auto', min_delta=0.001,
+                        patience=reduce_lr_after, #cooldown=epochs/10,
+                        verbose=1, mode='auto', 
+                        min_delta=reduce_lr_min_delta,
                         min_lr=1e-3*lr_rates
                     )
                 )
@@ -273,12 +287,11 @@ class SciModel(object):
                     "learning rate: expecting a `float` or a tuple/list of two arrays"
                     " with `epochs` and `learning rates`"
                 )
-            if stop_after is None:
-                stop_after = max([10, epochs/10])
             callbacks += [
                 k.callbacks.EarlyStopping(monitor="loss", mode='auto', verbose=1,
-                                          patience=stop_after, min_delta=1.0e-12),
-                k.callbacks.TerminateOnNaN()
+                                          patience=stop_after, min_delta=1e-9),
+                k.callbacks.TerminateOnNaN(),
+                EarlyStoppingByLossVal(stop_loss_value)
             ]
         # prepare X,Y data.
         x_true = to_list(x_true)
@@ -346,7 +359,7 @@ class SciModel(object):
             try:
                 self._model.save_weights("{}-start.hdf5".format(save_weights_to))
                 model_file_path = save_weights_to + "-{epoch:05d}-{loss:.3e}.hdf5"
-                model_check_point = k.callbacks.callbacks.ModelCheckpoint(
+                model_check_point = k.callbacks.ModelCheckpoint(
                     model_file_path, monitor='loss', save_weights_only=True, mode='auto',
                     period=10 if save_weights_freq==0 else save_weights_freq,
                     save_best_only=True if save_weights_freq==0 else False
@@ -561,3 +574,18 @@ class SciModel(object):
                 ys[-1][adjusted_ids, :] = 0.0
 
         return ys, weis
+
+
+class EarlyStoppingByLossVal(k.callbacks.Callback):
+    def __init__(self, value):
+        super(k.callbacks.Callback, self).__init__()
+        self.value = value
+        
+    def on_epoch_end(self, epoch, logs={}):
+        current = logs.get('loss')
+        if current < self.value:
+            self.model.stop_training = True
+            print("Epoch {:05d}: early stopping at loss value {:0.6e}".format(epoch, current))
+            print("Revise 'stop_loss_value={:0.12f}' in '.train' if it was not your intent. ".format(self.value))
+
+

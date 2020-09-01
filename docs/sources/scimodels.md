@@ -81,7 +81,7 @@ __Raises__
 
 
 ```python
-train(x_true, y_true, weights=None, target_weights=None, batch_size=64, epochs=100, learning_rate=0.001, shuffle=True, callbacks=None, stop_after=None, save_weights_to=None, save_weights_freq=0, default_zero_weight=0.0)
+train(x_true, y_true, weights=None, target_weights=None, batch_size=64, epochs=100, learning_rate=0.001, shuffle=True, callbacks=None, reduce_lr_after=None, reduce_lr_min_delta=0.001, stop_after=None, stop_loss_value=1e-08, save_weights_to=None, save_weights_freq=0, default_zero_weight=0.0)
 ```
 
 
@@ -115,8 +115,14 @@ __Arguments__
 - __shuffle__: Boolean (whether to shuffle the training data).
     Default value is True.
 - __callbacks__: List of `keras.callbacks.Callback` instances.
-- __stop_after__: To stop after certain missed epochs.
-    Defaulted to epochs.
+- __reduce_lr_after__: patience to reduce learning rate or stop after certain missed epochs.
+    Defaulted to epochs max(10, epochs/10).
+- __reduce_lr_min_delta__: min absolute change in total loss value that is considered a successful change. 
+    Defaulted to 0.001. 
+    This values affects number of failed attempts to trigger reduce learning rate based on reduce_lr_after. 
+- __stop_after__: To stop after certain missed epochs. Defaulted to total number of epochs.
+- __stop_loss_value__: The minimum value of the total loss that stops the training automatically. 
+    Defaulted to 1e-8. 
 - __save_weights_to__: (file_path) If you want to save the state of the model (at the end of the training).
 - __save_weights_freq__: (Integer) Save weights every N epcohs.
     Defaulted to 0.

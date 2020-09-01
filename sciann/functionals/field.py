@@ -6,8 +6,8 @@ from ..utils import default_bias_initializer, default_kernel_initializer, defaul
 from ..utils import default_regularizer
 from ..utils import floatx, set_floatx
 
-from keras.layers import Dense
-from keras.activations import linear
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.activations import linear
 
 
 class Field(Dense):
@@ -25,10 +25,8 @@ class Field(Dense):
         bias_initializer: Initializer for the bias.
             Defaulted to a normal distribution.
         kernel_regularizer: Regularizer for the kernel.
-            By default, it uses l1=0.001 and l2=0.001 regularizations.
             To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
         bias_regularizer: Regularizer for the bias.
-            By default, it uses l1=0.001 and l2=0.001 regularizations.
             To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
         trainable: Boolean to activate parameters of the network.
         dtype: data-type of the network parameters, can be

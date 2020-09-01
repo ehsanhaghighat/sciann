@@ -5,13 +5,15 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import keras as k
-import keras.backend as K
+import tensorflow.python.keras as k
 
-from keras.layers import Dense
-from keras.layers import Concatenate
-from keras.layers import InputSpec
-from keras.constraints import MinMaxNorm
+import tensorflow.python.keras.backend as K
+graph_unique_name = K.get_graph().unique_name
+
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.layers import Concatenate
+from tensorflow.python.keras.layers import InputSpec
+from tensorflow.python.keras.constraints import MinMaxNorm
 
 from ..utils import to_list
 from ..utils import default_constant_initializer
@@ -63,8 +65,7 @@ class Parameter(Functional):
         )
 
         if len(input_tensors) > 1:
-            lay = Concatenate()
-            lay.name = "conct_" + lay.name.split("_")[-1]
+            lay = Concatenate(name=graph_unique_name('conct'))
             lay_input = lay(input_tensors)
         else:
             lay_input = input_tensors[0]
@@ -137,7 +138,7 @@ class ParameterBase(Dense):
         self.built = True
 
 
-from keras.constraints import Constraint
+from tensorflow.python.keras.constraints import Constraint
 class MinMax(Constraint):
     """MinMax weight constraint.
 

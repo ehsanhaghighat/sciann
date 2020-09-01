@@ -5,38 +5,44 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import tensorflow.python.keras.backend as K
+graph_unique_name = K.get_graph().unique_name
 
-from keras.layers import Lambda
-from keras.layers import Dot
-from keras.layers import Input
-from keras.models import Model
+from tensorflow.python.keras.layers import Lambda
+from tensorflow.python.keras.layers import Dot
+from tensorflow.python.keras.layers import Input
+from tensorflow.python.keras.models import Model
+
+from tensorflow import gradients as tf_gradients
 
 from .utilities import *
 from .validations import *
 
 
-def pow(f, a):
+def pow(a, b):
     """Element-wise exponentiation applied to the `Functional` object.
 
     # Arguments
-        f: Functional object.
-        a: Python integer.
+        a, b: pow(a,b)
+        Note that at least one of them should be of type Functional.
 
     # Returns
         A Functional.
     """
-    validate_functional(f)
+    if is_functional(a):
+        validate_functional(a)
+        f, p = a, b
+        name = "pow{:d}".format(p) if isinstance(p, int) else "pow{:.3f}".format(p)
+        lmbd = [Lambda(lambda x: x ** p, name=graph_unique_name(name)) for X in f.outputs]
 
-    lmbd = [Lambda(lambda x: x**a) for X in f.outputs]
-    for l in lmbd:
-        if isinstance(a, int):
-            l.name = "pow{:d}/".format(a) + l.name.split("_")[-1]
-        elif isinstance(a, float):
-            l.name = "pow{:.3f}/".format(a) + l.name.split("_")[-1]
-        else:
-            raise ValueError(
-                'Expected an `int` or `float` for a in x^a. '
-            )
+    elif is_functional(b):
+        validate_functional(b)
+        f, p = b, a
+        name = "pow{:d}".format(p) if isinstance(p, int) else "pow{:.3f}".format(p)
+        lmbd = [Lambda(lambda x: p ** x, name=graph_unique_name(name)) for X in f.outputs]
+
+    else:
+        raise ValueError('Expected one functional in the arguments.')
 
     Functional = f.get_class()
     res = Functional(
@@ -63,14 +69,11 @@ def add(f, other):
     inputs = f.inputs.copy()
     if is_functional(other):
         inputs += to_list(other.inputs)
-        lmbd = [Lambda(lambda x: x[0]+x[1]) for X in f.outputs]
+        lmbd = [Lambda(lambda x: x[0]+x[1], name=graph_unique_name("add")) for X in f.outputs]
     else:
         _warn_for_ndarray(other)
-        lmbd = [Lambda(lambda x: x+other) for X in f.outputs]
-
-    for l in lmbd:
-        l.name = "add/" + l.name.split("_")[-1]
-        
+        lmbd = [Lambda(lambda x: x+other, name=graph_unique_name("add")) for X in f.outputs]
+    
     Functional = f.get_class()
     res = Functional(
         inputs = unique_tensors(inputs),
@@ -108,14 +111,11 @@ def sub(f, other):
     inputs = f.inputs.copy()
     if is_functional(other):
         inputs += to_list(other.inputs)
-        lmbd = [Lambda(lambda x: x[0]-x[1]) for X in f.outputs]
+        lmbd = [Lambda(lambda x: x[0]-x[1], name=graph_unique_name("sub")) for X in f.outputs]
     else:
         _warn_for_ndarray(other)
-        lmbd = [Lambda(lambda x: x-other) for X in f.outputs]
+        lmbd = [Lambda(lambda x: x-other, name=graph_unique_name("sub")) for X in f.outputs]
 
-    for l in lmbd:
-        l.name = "sub/" + l.name.split("_")[-1]
-    
     Functional = f.get_class()
     res = Functional(
         inputs = unique_tensors(inputs),
@@ -140,14 +140,11 @@ def rsub(f, other):
     inputs = f.inputs.copy()
     if is_functional(other):
         inputs += to_list(other.inputs)
-        lmbd = [Lambda(lambda x: x[1]-x[0]) for X in f.outputs]
+        lmbd = [Lambda(lambda x: x[1]-x[0], name=graph_unique_name("rsub")) for X in f.outputs]
     else:
         _warn_for_ndarray(other)
-        lmbd = [Lambda(lambda x: other-x) for X in f.outputs]
+        lmbd = [Lambda(lambda x: other-x, name=graph_unique_name("rsub")) for X in f.outputs]
 
-    for l in lmbd:
-        l.name = "rsub/" + l.name.split("_")[-1]
-    
     Functional = f.get_class()
     res = Functional(
         inputs = unique_tensors(inputs),
@@ -172,13 +169,10 @@ def mul(f, other):
     inputs = f.inputs.copy()
     if is_functional(other):
         inputs += to_list(other.inputs)
-        lmbd = [Lambda(lambda x: x[0]*x[1]) for X in f.outputs]
+        lmbd = [Lambda(lambda x: x[0]*x[1], name=graph_unique_name("mul")) for X in f.outputs]
     else:
         _warn_for_ndarray(other)
-        lmbd = [Lambda(lambda x: x*other) for X in f.outputs]
-
-    for l in lmbd:
-        l.name = "mul/" + l.name.split("_")[-1]
+        lmbd = [Lambda(lambda x: x*other, name=graph_unique_name("mul")) for X in f.outputs]
 
     Functional = f.get_class()
     res = Functional(
@@ -217,14 +211,11 @@ def div(f, other):
     inputs = f.inputs.copy()
     if is_functional(other):
         inputs += to_list(other.inputs)
-        lmbd = [Lambda(lambda x: x[0]/x[1]) for X in f.outputs]
+        lmbd = [Lambda(lambda x: x[0]/x[1], name=graph_unique_name("div")) for X in f.outputs]
     else:
         _warn_for_ndarray(other)
-        lmbd = [Lambda(lambda x: x/other) for X in f.outputs]
+        lmbd = [Lambda(lambda x: x/other, name=graph_unique_name("div")) for X in f.outputs]
 
-    for l in lmbd:
-        l.name = "div/" + l.name.split("_")[-1]
-    
     Functional = f.get_class()
     res = Functional(
         inputs = unique_tensors(inputs),
@@ -249,14 +240,11 @@ def rdiv(f, other):
     inputs = f.inputs.copy()
     if is_functional(other):
         inputs += to_list(other.inputs)
-        lmbd = [Lambda(lambda x: x[1]/x[0]) for X in f.outputs]
+        lmbd = [Lambda(lambda x: x[1]/x[0], name=graph_unique_name("rdiv")) for X in f.outputs]
     else:
         _warn_for_ndarray(other)
-        lmbd = [Lambda(lambda x: other/x) for X in f.outputs]
+        lmbd = [Lambda(lambda x: other/x, name=graph_unique_name("rdiv")) for X in f.outputs]
 
-    for l in lmbd:
-        l.name = "rdiv/" + l.name.split("_")[-1]
-    
     Functional = f.get_class()
     res = Functional(
         inputs = unique_tensors(inputs),
@@ -286,9 +274,9 @@ def dot(f, other):
         assert fl.shape.as_list() == fr.shape.as_list(),\
             'Expected equal dimensions for output of functionals. '
         l = Lambda(
-            lambda x: K.reshape(tf.math.reduce_sum(x*fr, list(range(1, len(fl.shape)))), [-1, 1])
+            lambda x: K.reshape(tf.math.reduce_sum(x*fr, list(range(1, len(fl.shape)))), [-1, 1]),
+            name=graph_unique_name("dot")
         )
-        l.name = "dot/" + l.name.split("_")[-1]
         layers += [l]
         outputs += [l(fl)]
         
@@ -319,8 +307,10 @@ def diag_part(f):
         assert len(o.shape) == 3, \
             'Exptected output dimension to be (None, N, N)'
         dim = o.shape[-1]
-        l = Lambda(lambda x: tf.linalg.diag_part(x))
-        l.name = "diag_part_" + l.name.split("_")[-1]
+        l = Lambda(
+            lambda x: tf.linalg.diag_part(x),
+            name=graph_unique_name("diag_part")
+        )
         lmbd += [l]
         outputs += [l(o)]
 
@@ -350,8 +340,10 @@ def diag(f):
         assert len(o.shape) == 2, \
             'Exptected output dimension to be (None, N)'
         dim = o.shape[-1]
-        l = Lambda(lambda x: tf.linalg.diag(x))
-        l.name = "diag_" + l.name.split("_")[-1]
+        l = Lambda(
+            lambda x: tf.linalg.diag(x),
+            name=graph_unique_name("diag")
+        )
         lmbd += [l]
         outputs += [l(o)]
 
@@ -535,6 +527,18 @@ def coth(x):
     return _apply_function(x, 'coth')
 
 
+def sigmoid(x):
+    """Computes coth of x element-wise.
+
+    # Arguments
+        x: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    return _apply_function(x, 'sigmoid')
+
+
 def abs(x):
     """Computes abs of x element-wise.
 
@@ -548,7 +552,7 @@ def abs(x):
 
 
 def sign(x):
-    """Computes abs of x element-wise.
+    """Computes sign of x element-wise.
 
     # Arguments
         x: Functional object.
@@ -557,6 +561,37 @@ def sign(x):
         A new functional object.
     """
     return _apply_function(x, 'sign')
+
+
+def step(x):
+    """Computes step (Heaviside) of x element-wise.
+       H(x) = 0 if x<=0
+       H(x) = 1 if x>0
+
+    # Arguments
+        x: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    validate_functional(x)
+
+    lmbd = []
+    for i in range(len(x.outputs)):
+        lmbd.append(
+            Lambda(
+                lambda x: K.cast(K.greater(x, 0.0), x.dtype), 
+                name=graph_unique_name("step")
+            )
+        )
+        
+    Functional = x.get_class()
+    res = Functional(
+        inputs = x.inputs.copy(),
+        outputs = _apply_operation(lmbd, x),
+        layers = lmbd
+    )
+    return res
 
 
 def log(x):
@@ -569,6 +604,18 @@ def log(x):
         A new functional object.
     """
     return _apply_function(x, 'log')
+
+
+def log10(x):
+    """Computes log10 of x element-wise.
+
+    # Arguments
+        x: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    return log(x)/np.log(10.0)
 
 
 def exp(x):
@@ -647,10 +694,14 @@ def _apply_function(x, fname, **kwargs):
     validate_functional(x)
 
     fun = get_activation(fname)
-    lmbd = [Lambda(lambda x: fun(x, **kwargs)) for X in x.outputs]
-    for l in lmbd:
-        l.name = "{}/".format(fname) + l.name.split("_")[-1]
-        
+    lmbd = []
+    for i in range(len(x.outputs)):
+        lmbd.append(
+            Lambda(
+                lambda x: fun(x, **kwargs),
+                name=graph_unique_name("{}".format(fname))
+            )
+        )
     Functional = x.get_class()
     res = Functional(
         inputs = x.inputs.copy(),
@@ -670,18 +721,25 @@ def getitem(x, item):
         A new functional object.
     """
     validate_functional(x)
-    
+
+    in_item = item
+    print(in_item)
+    if not isinstance(in_item, tuple):
+        in_item = (in_item,)
+    print(in_item)
+
     itms = (slice(None, None, None),)
-    if isinstance(item, tuple):
-        itms += item
-    else:
-        itms += (item, )
-
-    lmbd = [Lambda(lambda xx: K.reshape(xx[itms], (-1,1))) for xx in x.outputs]
-
+    for it in in_item:
+        itms += (slice(it, it+1) if isinstance(it, int) else it, )
+    
+    lmbd = []
     ys = []
-    for l, y in zip(lmbd, x.outputs):
-        l.name = "slice/" + l.name.split("_")[-1]
+    for y in x.outputs:
+        l = Lambda(
+            lambda xx: xx[itms], 
+            name=graph_unique_name("slice")
+        )
+        lmbd.append(l)
         ys.append(l(y))
 
     Functional = x.get_class()
@@ -710,7 +768,7 @@ def _gradients(ys, xs, order=1):
         ds = ys
         for i in range(order):
             ds = unpack_singleton(
-                tf.gradients(
+                tf_gradients(
                     ds, xs,
                     unconnected_gradients='zero',
                     # colocate_gradients_with_ops=True, TF: V1.14.0
@@ -724,7 +782,7 @@ def _gradients(ys, xs, order=1):
             ds.append(y)
             for i in range(order):
                 ds[-1] = unpack_singleton(
-                    tf.gradients(
+                    tf_gradients(
                         ds[-1], xs,
                         unconnected_gradients='zero',
                         # colocate_gradients_with_ops=True, TF: V1.14.0
@@ -838,20 +896,19 @@ def _lambda_gradient(ys, xs, order=1, gtype='Grad', name=''):
     grads, layers = [], []
     for y in to_list(ys):
         if gtype == 'Grad':
-            lay = Lambda(lambda y: _gradients(y, xs, order))
-            name_prefix = 'Grad_' if order == 1 else 'Grad{:d}_'.format(order)
+            name_prefix = 'Grad_' if order == 1 else 'Grad{:d}_'.format(order) + name + '/'
+            lay = Lambda(lambda y: _gradients(y, xs, order), name=graph_unique_name(name_prefix))
         elif gtype == 'dGrad':
-            lay = Lambda(lambda y: _diag_gradients(y, xs, order))
-            name_prefix = 'DiagGrad_' if order == 1 else 'Grad{:d}_'.format(order)
+            name_prefix = 'DiagGrad_' if order == 1 else 'Grad{:d}_'.format(order) + name + '/'
+            lay = Lambda(lambda y: _diag_gradients(y, xs, order), name=graph_unique_name(name_prefix))
         elif gtype == 'Div':
-            lay = Lambda(lambda y: _div_gradients(y, xs, order))
-            name_prefix = 'Div_' if order == 1 else 'Grad{:d}_'.format(order)
+            name_prefix = 'Div_' if order == 1 else 'Grad{:d}_'.format(order) + name + '/'
+            lay = Lambda(lambda y: _div_gradients(y, xs, order), name=graph_unique_name(name_prefix))
         else:
             raise ValueError(
                 'Unrecognised gradient type: {} \n'.format(type) +
                 '     Please choose among (Grad, dGrad, Div). '
             )
-        lay.name = name_prefix + name + '/' + lay.name
         layers += to_list(lay)
         grads += to_list(lay(y))
 

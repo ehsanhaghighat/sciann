@@ -2,7 +2,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from keras.layers import InputLayer
+from tensorflow.python.keras.layers import InputLayer
 from ..utils import floatx, set_floatx, to_list
 from .functional import Functional
 

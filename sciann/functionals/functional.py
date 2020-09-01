@@ -5,19 +5,22 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import keras.backend as K
+import tensorflow.python.keras.backend as K
+graph_unique_name = K.get_graph().unique_name
 
-from keras.layers import Dense
-from keras.layers import Activation
-from keras.layers import Concatenate
-from keras.models import Model
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.layers import Activation
+from tensorflow.python.keras.layers import Concatenate
+from tensorflow.python.keras.models import Model
 
 from ..utils import to_list, unpack_singleton, is_same_tensor, unique_tensors
-from ..utils import default_bias_initializer, default_kernel_initializer, default_constant_initializer
+from ..utils import default_weight_initializer
 from ..utils import default_regularizer
-from ..utils import validations, get_activation, getitem
+from ..utils import validations, getitem
 from ..utils import floatx, set_floatx
 from ..utils import math
+from ..utils.activations import SciActivation, get_activation
+from ..utils import prepare_default_activations_and_initializers
 
 from .field import Field
 
@@ -43,10 +46,8 @@ class Functional(object):
         kernel_initializer: Initializer of the `Kernel`, from `k.initializers`.
         bias_initializer: Initializer of the `Bias`, from `k.initializers`.
         kernel_regularizer: Regularizer for the kernel.
-            By default, it uses l1=0.001 and l2=0.001 regularizations.
             To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
         bias_regularizer: Regularizer for the bias.
-            By default, it uses l1=0.001 and l2=0.001 regularizations.
             To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
         dtype: data-type of the network parameters, can be
             ('float16', 'float32', 'float64').
@@ -65,8 +66,8 @@ class Functional(object):
                  hidden_layers=None,
                  activation="tanh",
                  output_activation="linear",
-                 kernel_initializer=default_kernel_initializer(),
-                 bias_initializer=default_bias_initializer(),
+                 kernel_initializer=None,
+                 bias_initializer=None,
                  kernel_regularizer=None,
                  bias_regularizer=None,
                  dtype=None,
@@ -77,6 +78,11 @@ class Functional(object):
             dtype = K.floatx()
         elif not K.floatx() == dtype:
             K.set_floatx(dtype)
+        # prepare hidden layers.
+        if hidden_layers is None:
+            hidden_layers = []
+        else:
+            hidden_layers = to_list(hidden_layers)
         # check for copy constructor.
         if all([x in kwargs for x in ('inputs', 'outputs', 'layers')]):
             self._inputs = kwargs['inputs'].copy()
@@ -84,23 +90,44 @@ class Functional(object):
             self._layers = kwargs['layers'].copy()
             self._set_model()
             return
-        # prepare initializers.
-        if isinstance(kernel_initializer, (float, int)):
-            kernel_initializer = default_constant_initializer(kernel_initializer)
-        if isinstance(bias_initializer, (float, int)):
-            bias_initializer = default_constant_initializer(bias_initializer)
+        # prepare kernel initializers.
+        activations, def_biasinit, def_kerinit = \
+            prepare_default_activations_and_initializers(
+            len(hidden_layers) * [activation] + [output_activation]
+        )
+        if kernel_initializer is None:
+            kernel_initializer = def_kerinit
+        elif isinstance(kernel_initializer, (float, int)):
+            kernel_initializer = default_weight_initializer(
+                len(hidden_layers) * [activation] + [output_activation],
+                'constant',
+                scale=kernel_initializer
+            )
+        else:
+            kernel_initializer = [kernel_initializer for l in len(hidden_layers) * [activation] + [output_activation]]
+        # prepare bias initializers.
+        if bias_initializer is None:
+            bias_initializer = def_biasinit
+        elif isinstance(bias_initializer, (float, int)):
+            bias_initializer = default_weight_initializer(
+                len(hidden_layers) * [activation] + [output_activation],
+                'constant',
+                scale=bias_initializer
+            )
+        else:
+            bias_initializer = [bias_initializer for l in len(hidden_layers) * [activation] + [output_activation]]
         # prepare regularizers.
         kernel_regularizer = default_regularizer(kernel_regularizer)
         bias_regularizer = default_regularizer(bias_regularizer)
         # prepares fields.
         fields = to_list(fields)
         if all([isinstance(fld, str) for fld in fields]):
-            output_fileds = [
+            output_fields = [
                 Field(
                     name=fld,
                     dtype=dtype,
-                    kernel_initializer=kernel_initializer,
-                    bias_initializer=bias_initializer,
+                    kernel_initializer=kernel_initializer[-1],
+                    bias_initializer=bias_initializer[-1],
                     kernel_regularizer=kernel_regularizer,
                     bias_regularizer=bias_regularizer,
                     trainable=trainable,
@@ -108,7 +135,7 @@ class Functional(object):
                 for fld in fields
             ]
         elif all([validations.is_field(fld) for fld in fields]):
-            output_fileds = fields
+            output_fields = fields
         else:
             raise TypeError(
                 'Please provide a "list" of field names of'
@@ -129,11 +156,7 @@ class Functional(object):
                 "Input error: Please provide a `list` of `Functional`s. \n"
                 "Provided - {}".format(variables)
             )
-        # prepare hidden layers.
-        if hidden_layers is None:
-            hidden_layers = []
-        else:
-            hidden_layers = to_list(hidden_layers)
+
         # Check and convert activation functions to proper format.
         assert not isinstance(activation, list), \
             'Expected an activation function name not a "list". '
@@ -143,8 +166,7 @@ class Functional(object):
         if len(inputs) == 1:
             net_input = inputs[0]
         else:
-            layer = Concatenate()
-            layer.name = "conct_" + layer.name.split("_")[-1]
+            layer = Concatenate(name=graph_unique_name('conct'))
             net_input = layer(inputs)
 
         # Define the output network.
@@ -153,25 +175,24 @@ class Functional(object):
             # Add the layer.
             layer = Dense(
                 nNeuron,
-                kernel_initializer=kernel_initializer,
-                bias_initializer=bias_initializer,
+                kernel_initializer=kernel_initializer[nLay],
+                bias_initializer=bias_initializer[nLay],
                 kernel_regularizer=kernel_regularizer,
                 bias_regularizer=bias_regularizer,
                 trainable=trainable,
                 dtype=dtype,
+                name=graph_unique_name("D{:d}b".format(nNeuron))
             )
-            layer.name = "D{:d}b_".format(nNeuron) + layer.name.split("_")[-1]
             layers.append(layer)
             net[-1] = layer(net[-1])
             # Apply the activation.
             if afunc.__name__ != 'linear': #nLay<len(hidden_layers)-1 and
-                layer = Activation(afunc)
-                layer.name = "{}_".format(afunc.__name__) + layer.name.split("_")[-1]
+                layer = activations[nLay]
                 layers.append(layer)
                 net[-1] = layer(net[-1])
 
         # store output layers.
-        for out in output_fileds:
+        for out in output_fields:
             layers.append(out)
 
         # Assign to the output variable
@@ -179,19 +200,17 @@ class Functional(object):
             net_output = net[0]
         else:
             raise ValueError("Legacy for Enrichment: Must be updated. ")
-            layer = Concatenate()
-            layer.name = "conct_" + layer.name.split("_")[-1]
+            layer = Concatenate(name=graph_unique_name('conct'))
             net_output = layer(net)
 
         # check output activation functions.
         output_func = get_activation(output_activation)
         # Define the final outputs of each network
         outputs = []
-        for out in output_fileds:
+        for out in output_fields:
             # add the activation on the output.
             if output_func.__name__ != 'linear':
-                layer = Activation(output_func)
-                layer.name = "{}_".format(output_func.__name__) + layer.name.split("_")[-1]
+                layer = activations[-1]
                 layers.append(layer)
                 outputs.append(layer(out(net_output)))
             else:
@@ -236,7 +255,7 @@ class Functional(object):
             mesh = kwargs[1]
         else:
             raise NotImplemented()
-        x_pred = to_list(mesh)
+        x_pred = to_list(mesh.copy())
         # To have unified output for postprocessing - limitted support.
         shape_default = x_pred[0].shape if all([x.shape==x_pred[0].shape for x in x_pred]) else None
         # prepare X,Y data.
@@ -347,7 +366,6 @@ class Functional(object):
                 l.trainable = val
         else:
             raise ValueError('Expected a boolean value: True or False')
-        return self
 
     def reinitialize_weights(self):
         for lay in self.layers:
@@ -355,7 +373,6 @@ class Functional(object):
                 K.set_value(lay.kernel, lay.kernel_initializer(lay.kernel.shape))
             if hasattr(lay, 'bias_initializer') and lay.bias is not None:
                 K.set_value(lay.bias, lay.bias_initializer(lay.bias.shape))
-        return self
 
     def split(self):
         """ In the case of `Functional` with multiple outputs,
