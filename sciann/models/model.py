@@ -16,6 +16,7 @@ from tensorflow.python.keras.utils.vis_utils import plot_model
 
 from ..utils import unpack_singleton, to_list
 from ..utils import is_variable, is_constraint, is_functional
+from ..utils.optimizers import GradientObserver, ScipyOptimizer
 
 from ..functionals import Variable
 from ..functionals import RadialBasis
@@ -124,10 +125,16 @@ class SciModel(object):
             **kwargs
         )
         # compile the model.
-        model.compile(
-            loss=loss_func,
-            optimizer=optimizer,
-        )
+        if isinstance(optimizer, str) and "Scipy-" in optimizer:
+            model.compile(
+                loss=loss_func,
+                optimizer=GradientObserver(method=optimizer)
+            )
+        else:
+            model.compile(
+                loss=loss_func,
+                optimizer=optimizer
+            )
         # model.train_function = True
 
         # set initial state of the model.
@@ -156,6 +163,12 @@ class SciModel(object):
     @property
     def inputs(self):
         return self._inputs
+
+    def load_weights(self, file):
+        if os.path.exists(file):
+            self.model.load_weights(file)
+        else:
+            raise ValueError('File not found.')
 
     def verify_update_constraints(self, constraints):
         ver = []
@@ -198,13 +211,15 @@ class SciModel(object):
               learning_rate=0.001,
               shuffle=True,
               callbacks=None,
+              stop_lr_value=1e-8,
               reduce_lr_after=None,
-              reduce_lr_min_delta=0.001,
+              reduce_lr_min_delta=0.,
               stop_after=None,
               stop_loss_value=1e-8,
               save_weights_to=None,
               save_weights_freq=0,
               default_zero_weight=0.0,
+              validation_data=None,
               **kwargs):
         """Performs the training on the model.
 
@@ -237,7 +252,9 @@ class SciModel(object):
             callbacks: List of `keras.callbacks.Callback` instances.
             reduce_lr_after: patience to reduce learning rate or stop after certain missed epochs.
                 Defaulted to epochs max(10, epochs/10).
-            reduce_lr_min_delta: min absolute change in total loss value that is considered a successful change. 
+            stop_lr_value: stop the training if learning rate goes lower than this value.
+                Defaulted to 1e-8.
+            reduce_lr_min_delta: min absolute change in total loss value that is considered a successful change.
                 Defaulted to 0.001. 
                 This values affects number of failed attempts to trigger reduce learning rate based on reduce_lr_after. 
             stop_after: To stop after certain missed epochs. Defaulted to total number of epochs.
@@ -272,7 +289,7 @@ class SciModel(object):
                         patience=reduce_lr_after, #cooldown=epochs/10,
                         verbose=1, mode='auto', 
                         min_delta=reduce_lr_min_delta,
-                        min_lr=1e-3*lr_rates
+                        min_lr=0.
                     )
                 )
             elif isinstance(learning_rate, (tuple, list)):
@@ -291,7 +308,8 @@ class SciModel(object):
                 k.callbacks.EarlyStopping(monitor="loss", mode='auto', verbose=1,
                                           patience=stop_after, min_delta=1e-9),
                 k.callbacks.TerminateOnNaN(),
-                EarlyStoppingByLossVal(stop_loss_value)
+                EarlyStoppingByLossVal(stop_loss_value),
+                EarlyStoppingByLearningRate(stop_lr_value)
             ]
         # prepare X,Y data.
         x_true = to_list(x_true)
@@ -368,16 +386,32 @@ class SciModel(object):
                 print("\nWARNING: Failed to save model.weights to the provided path: {}\n".format(save_weights_to))
         if model_file_path is not None:
             callbacks.append(model_check_point)
-        # perform the training.
-        history = self._model.fit(
-            x_true, y_star,
-            sample_weight=sample_weights,  #sums to number of samples.
-            epochs=epochs,
-            batch_size=batch_size,
-            shuffle=shuffle,
-            callbacks=callbacks,
-            **kwargs
-        )
+
+        if isinstance(self._model.optimizer, GradientObserver):
+            opt = ScipyOptimizer(self._model)
+            _, history = opt.fit(
+                x_true, y_star,
+                method=self._model.optimizer.method.split('Scipy-')[1],
+                epochs=epochs,
+                batch_size=batch_size,
+                shuffle=shuffle,
+                callbacks=callbacks,
+                validation_data=validation_data,
+                **kwargs
+            )
+        else:
+            # perform the training.
+            history = self._model.fit(
+                x_true, y_star,
+                sample_weight=sample_weights,  #sums to number of samples.
+                epochs=epochs,
+                batch_size=batch_size,
+                shuffle=shuffle,
+                callbacks=callbacks,
+                validation_data=validation_data,
+                **kwargs
+            )
+
         if save_weights_to is not None:
             try:
                 self._model.save_weights("{}-end.hdf5".format(save_weights_to))
@@ -577,15 +611,31 @@ class SciModel(object):
 
 
 class EarlyStoppingByLossVal(k.callbacks.Callback):
-    def __init__(self, value):
+    def __init__(self, value, stop_after=1):
         super(k.callbacks.Callback, self).__init__()
         self.value = value
+        self.wait = stop_after
         
     def on_epoch_end(self, epoch, logs={}):
         current = logs.get('loss')
         if current < self.value:
+            self.wait -= 1
+            if self.wait <= 0:
+                self.model.stop_training = True
+                print("Epoch {:05d}: early stopping at loss value {:0.6e}".format(epoch, current))
+                print("Revise 'stop_loss_value={:0.12f}' in '.train' if it was not your intent. ".format(self.value))
+
+
+class EarlyStoppingByLearningRate(k.callbacks.Callback):
+    def __init__(self, value):
+        super(k.callbacks.Callback, self).__init__()
+        self.value = value
+
+    def on_epoch_end(self, epoch, logs={}):
+        current = logs.get('lr')
+        if current < self.value:
             self.model.stop_training = True
-            print("Epoch {:05d}: early stopping at loss value {:0.6e}".format(epoch, current))
-            print("Revise 'stop_loss_value={:0.12f}' in '.train' if it was not your intent. ".format(self.value))
+            print("Epoch {:05d}: early stopping at learning rate {:0.6e}".format(epoch, current))
+            print("Revise 'stop_lr_value={:0.12f}' in '.train' if it was not your intent. ".format(self.value))
 
 

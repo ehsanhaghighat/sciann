@@ -65,6 +65,15 @@ PAGES = [
             Variable,
             Field,
             Parameter,
+        ],
+        'methods': [
+            Functional.eval,
+            Functional.get_weights,
+            Functional.set_weights,
+            Functional.reinitialize_weights,
+            Functional.count_params,
+            Functional.set_trainable,
+            Functional.split,
         ]
     },
     {

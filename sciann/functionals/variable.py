@@ -35,6 +35,7 @@ class Variable(Functional):
             set_floatx(dtype)
 
         layer = InputLayer(
+            # batch_input_shape=(None, 1) if units == 1 else (None, units, 1),
             batch_input_shape=(None, units),
             input_tensor=tensor,
             name=name,

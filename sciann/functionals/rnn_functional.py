@@ -45,6 +45,7 @@ class RNNFunctional(object):
             Defaulted to `SimpleRNN`.
             Check `Keras` documentation for additional information.
         kernel_initializer: Initializer of the `Kernel`, from `k.initializers`.
+        recurrent_initializer: Initializer of the `Recurrent Kernel`, from `k.initializers`.
         bias_initializer: Initializer of the `Bias`, from `k.initializers`.
         kernel_regularizer: Regularizer for the kernel.
             To set l1 and l2 to custom values, pass [l1, l2] or {'l1':l1, 'l2':l2}.
@@ -70,8 +71,10 @@ class RNNFunctional(object):
                  rnn_type="SimpleRNN",
                  recurrent_activation="tanh",
                  kernel_initializer=None,
+                 recurrent_initializer=None,
                  bias_initializer=None,
                  kernel_regularizer=None,
+                 recurrent_regularizer=None,
                  bias_regularizer=None,
                  dtype=None,
                  trainable=True,
@@ -98,6 +101,7 @@ class RNNFunctional(object):
             prepare_default_activations_and_initializers(
             len(hidden_layers) * [activation] + [output_activation]
         )
+        # prepare kernel initializer.
         if kernel_initializer is None:
             kernel_initializer = def_kerinit
         elif isinstance(kernel_initializer, (float, int)):
@@ -108,6 +112,17 @@ class RNNFunctional(object):
             )
         else:
             kernel_initializer = [kernel_initializer for l in len(hidden_layers) * [activation] + [output_activation]]
+        # prepare recurrent initializer.
+        if recurrent_initializer is None:
+            recurrent_initializer = def_kerinit
+        elif isinstance(recurrent_initializer, (float, int)):
+            recurrent_initializer = default_weight_initializer(
+                len(hidden_layers) * [activation] + [output_activation],
+                'constant',
+                scale=recurrent_initializer
+            )
+        else:
+            recurrent_initializer = [recurrent_initializer for l in len(hidden_layers) * [activation] + [output_activation]]
         # prepare bias initializers.
         if bias_initializer is None:
             bias_initializer = def_biasinit
@@ -121,6 +136,7 @@ class RNNFunctional(object):
             bias_initializer = [bias_initializer for l in len(hidden_layers) * [activation] + [output_activation]]
         # prepare regularizers.
         kernel_regularizer = default_regularizer(kernel_regularizer)
+        recurrent_regularizer = default_regularizer(recurrent_regularizer)
         bias_regularizer = default_regularizer(bias_regularizer)
         # prepares fields.
         fields = to_list(fields)
@@ -128,10 +144,13 @@ class RNNFunctional(object):
             output_fields = [
                 RNNField(
                     name=fld,
+                    rnn_type='Dense',
                     dtype=dtype,
                     kernel_initializer=kernel_initializer[-1],
+                    recurrent_initializer=recurrent_initializer[-1],
                     bias_initializer=bias_initializer[-1],
                     kernel_regularizer=kernel_regularizer,
+                    recurrent_regularizer=recurrent_regularizer,
                     bias_regularizer=bias_regularizer,
                     trainable=trainable,
                 )
@@ -159,11 +178,6 @@ class RNNFunctional(object):
                 "Input error: Please provide a `list` of `Functional`s. \n"
                 "Provided - {}".format(variables)
             )
-        # prepare hidden layers.
-        if hidden_layers is None:
-            hidden_layers = []
-        else:
-            hidden_layers = to_list(hidden_layers)
         # Check and convert activation functions to proper format.
         assert not isinstance(activation, list), \
             'Expected an activation function name not a "list". '
@@ -178,7 +192,6 @@ class RNNFunctional(object):
 
         # Define the networks.
         net = [net_input]
-        assert len(hidden_layers) > 0, 'Minimum of 1 RNN hidden layer is needed.'
 
         # Adding hidden layers
         for nLay, nNeuron in enumerate(hidden_layers):
@@ -188,10 +201,13 @@ class RNNFunctional(object):
                     layer = LSTM(
                         nNeuron,
                         return_sequences=True,
+                        activation=None,
                         recurrent_activation=recurrent_activation,
                         kernel_initializer=kernel_initializer[nLay],
+                        recurrent_initializer=recurrent_initializer[nLay],
                         bias_initializer=bias_initializer[nLay],
                         kernel_regularizer=kernel_regularizer,
+                        recurrent_regularizer=recurrent_regularizer,
                         bias_regularizer=bias_regularizer,
                         trainable=trainable,
                         dtype=dtype,
@@ -201,10 +217,13 @@ class RNNFunctional(object):
                 elif rnn_type=='SimpleRNN':
                     layer = SimpleRNN(
                         nNeuron,
+                        activation=None,
                         return_sequences=True,
                         kernel_initializer=kernel_initializer[nLay],
+                        recurrent_initializer=recurrent_initializer[nLay],
                         bias_initializer=bias_initializer[nLay],
                         kernel_regularizer=kernel_regularizer,
+                        recurrent_regularizer=recurrent_regularizer,
                         bias_regularizer=bias_regularizer,
                         trainable=trainable,
                         dtype=dtype,
@@ -300,7 +319,7 @@ class RNNFunctional(object):
             mesh = kwargs[1]
         else:
             raise NotImplemented()
-        x_pred = to_list(mesh)
+        x_pred = to_list(mesh.copy())
         # To have unified output for postprocessing - limitted support.
         shape_default = x_pred[0].shape if all([x.shape == x_pred[0].shape for x in x_pred]) else None
         # prepare X,Y data.

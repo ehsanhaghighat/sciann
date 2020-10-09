@@ -14,6 +14,7 @@ from tensorflow.python.keras.layers import Input
 from tensorflow.python.keras.models import Model
 
 from tensorflow import gradients as tf_gradients
+from tensorflow import stop_gradient as tf_stop_gradient
 
 from .utilities import *
 from .validations import *
@@ -1047,6 +1048,31 @@ def div_grad(f, *args, **kwargs):
         A new functional object.
     """
     return _gdiff("Div", f, *args, **kwargs)
+
+
+def stop_gradient(f):
+    """Equivalent to stop_grdient in tf.
+    Use-case: to force zero-gradient with respect to a part of the network.
+
+    # Arguments
+        f: Functional object.
+
+    # Returns
+        A new functional object.
+    """
+    if is_functional(f):
+        lmbd = [Lambda(lambda x: tf_stop_gradient(x), name=graph_unique_name("stop_grad")) for X in f.outputs]
+    else:
+        raise ValueError('Expected one functional in the arguments.')
+
+    Functional = f.get_class()
+    res = Functional(
+        inputs = unique_tensors(f.inputs.copy()),
+        outputs = _apply_operation(lmbd, f),
+        layers = lmbd,
+    )
+
+    return res
 
 
 def radial_basis(xs, ci, radii):

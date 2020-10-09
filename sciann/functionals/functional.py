@@ -322,9 +322,25 @@ class Functional(object):
         )
 
     def get_weights(self, at_layer=None):
+        """ Get the weights and biases of different layers.
+
+        # Arguments
+            at_layer: 
+                Get the weights of a specific layer. 
+            
+        # Returns
+            List of numpy array. 
+        """
         return [l.get_weights() for l in self.layers]
 
     def set_weights(self, weights):
+        """ Set the weights and biases of different layers.
+
+        # Arguments
+            weights: Should take the dimensions as the output of ".get_weights"
+            
+        # Returns 
+        """
         try:
             for l, w in zip(self.layers, weights):
                 l.set_weights(w)
@@ -334,6 +350,13 @@ class Functional(object):
             )
 
     def count_params(self):
+        """ Total number of parameters of a functional.
+
+        # Arguments
+            
+        # Returns 
+            Total number of parameters.
+        """
         return sum([l.count_params() for l in self.layers])
 
     def copy(self):
@@ -360,14 +383,42 @@ class Functional(object):
     def append_to_outputs(self, outputs):
         self._outputs += to_list(outputs)
 
-    def set_trainable(self, val):
+    def set_trainable(self, val, layers=None):
+        """ Set the weights and biases of a functional object trainable or not-trainable.
+        Note: The SciModel should be called after this.
+
+        # Arguments
+            val: (Ture, False)
+            layers: list of layers to be set trainable or non-trainable.
+                defaulted to None.
+            
+        # Returns 
+        """
+        print("Warning: Call 'SciModel' after using set_trainable")
         if isinstance(val, bool):
-            for l in self._layers:
-                l.trainable = val
+            if layers is None:
+                for l in self._layers:
+                    l.trainable = val
+            else:
+                for li in to_list(layers):
+                    i = -1
+                    for l in self._layers:
+                        if l.count_params() > 0:
+                            i += 1
+                        if li == i:
+                            l.trainable = val
+                            break
         else:
             raise ValueError('Expected a boolean value: True or False')
 
     def reinitialize_weights(self):
+        """ Re-initialize the weights and biases of a functional object.
+
+        # Arguments
+
+        # Returns 
+        
+        """
         for lay in self.layers:
             if hasattr(lay, 'kernel_initializer') and lay.kernel is not None:
                 K.set_value(lay.kernel, lay.kernel_initializer(lay.kernel.shape))

@@ -3,7 +3,7 @@ from __future__ import division
 from __future__ import print_function
 
 from ..utils import default_bias_initializer, default_kernel_initializer, default_constant_initializer
-from tensorflow.python.keras.layers import Dense, TimeDistributed
+from tensorflow.python.keras.layers import Dense, SimpleRNN, LSTM, TimeDistributed
 from tensorflow.python.keras.activations import linear
 
 from ..utils import default_bias_initializer, default_kernel_initializer
@@ -38,10 +38,13 @@ class RNNField(TimeDistributed):
     """
     def __init__(self, units=1,
                  name=None,
+                 rnn_type='SimpleRNN',
                  activation=linear,
                  kernel_initializer=default_kernel_initializer(),
+                 recurrent_initializer=default_kernel_initializer(),
                  bias_initializer=default_bias_initializer(),
                  kernel_regularizer=None,
+                 recurrent_regularizer=None,
                  bias_regularizer=None,
                  trainable=True,
                  dtype=None,):
@@ -64,17 +67,55 @@ class RNNField(TimeDistributed):
         kernel_regularizer = default_regularizer(kernel_regularizer)
         bias_regularizer = default_regularizer(bias_regularizer)
 
-        super(RNNField, self).__init__(
-            Dense(
-                units=units,
-                activation=activation,
-                kernel_initializer=kernel_initializer,
-                bias_initializer=bias_initializer,
-                kernel_regularizer=kernel_regularizer,
-                bias_regularizer=bias_regularizer,
-                use_bias=True,
-                trainable=trainable,
-                name=name,
-                dtype=dtype,
+        if rnn_type == 'SimpleRNN':
+            super(RNNField, self).__init__(
+                SimpleRNN(
+                    units=units,
+                    activation=activation,
+                    return_sequences=True,
+                    kernel_initializer=kernel_initializer,
+                    recurrent_initializer=recurrent_initializer,
+                    bias_initializer=bias_initializer,
+                    kernel_regularizer=kernel_regularizer,
+                    recurrent_regularizer=recurrent_regularizer,
+                    bias_regularizer=bias_regularizer,
+                    trainable=trainable,
+                    dtype=dtype,
+                    unroll=True,
+                    name=name
+                )
             )
-        )
+        elif rnn_type == 'LSTM':
+            super(RNNField, self).__init__(
+                LSTM(
+                    units=units,
+                    activation=activation,
+                    return_sequences=True,
+                    kernel_initializer=kernel_initializer,
+                    recurrent_initializer=recurrent_initializer,
+                    bias_initializer=bias_initializer,
+                    kernel_regularizer=kernel_regularizer,
+                    recurrent_regularizer=recurrent_regularizer,
+                    bias_regularizer=bias_regularizer,
+                    trainable=trainable,
+                    dtype=dtype,
+                    unroll=True,
+                    name=name
+                )
+            )
+        elif rnn_type == 'Dense':
+            super(RNNField, self).__init__(
+                Dense(
+                    units=units,
+                    activation=activation,
+                    kernel_initializer=kernel_initializer,
+                    bias_initializer=bias_initializer,
+                    kernel_regularizer=kernel_regularizer,
+                    bias_regularizer=bias_regularizer,
+                    trainable=trainable,
+                    dtype=dtype,
+                    name=name
+                )
+            )
+        else:
+            raise NotImplementedError('Supported RNNType: (SimpleRNN, LSTM, Dense)')

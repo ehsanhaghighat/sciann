@@ -9,6 +9,7 @@ from . import utilities
 from . import validations
 from . import activations
 from . import initializers
+from . import optimizers
 
 from .utilities import *
 from .validations import *
