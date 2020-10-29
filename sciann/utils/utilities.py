@@ -25,7 +25,7 @@ from tensorflow.python.keras.initializers import VarianceScaling
 from tensorflow.python.keras.regularizers import l1_l2
 
 from .initializers import SciInitializer as Initializer
-from .activations import get_activation, SciActivation
+from .activations import get_activation, SciActivation, SciActivationLayer
 
 
 def _is_tf_1():
@@ -135,11 +135,19 @@ def prepare_default_activations_and_initializers(actfs, seed=None):
     bias_initializer = []
     kernel_initializer = []
     for lay, actf in enumerate(to_list(actfs)):
-        bias_initializer.append(Initializer(actf, lay, True, seed))
-        kernel_initializer.append(Initializer(actf, lay, False, seed))
-        f = get_activation(actf)
+        if isinstance(actf, str):
+            lay_actf = actf.lower().split('l-')
+        else:
+            raise ValueError('expected a string for actf.')
+        bias_initializer.append(Initializer(lay_actf[-1], lay, True, seed))
+        kernel_initializer.append(Initializer(lay_actf[-1], lay, False, seed))
+        f = get_activation(lay_actf[-1])
         w = kernel_initializer[-1].w0
-        activations.append(SciActivation(w, f))
+        if len(lay_actf) == 1:
+            activations.append(SciActivation(w, f))
+        else:
+            activations.append(SciActivationLayer(w, f))
+
     return activations, bias_initializer, kernel_initializer
 
 

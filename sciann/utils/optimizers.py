@@ -25,7 +25,7 @@ class GradientObserver(optimizer_v2.OptimizerV2):
     def __init__(self, learning_rate=0.001, method='L-BFGS-B', **kwargs):
         super(GradientObserver, self).__init__('GradientObserver')
         self._learning_rate = tf_variable.Variable(kwargs.get('lr', learning_rate), 'float32')
-        self._method = method
+        self._method = method.lower().split("scipy-")[-1]
         self._vars = []
         self._grads = {}
 
@@ -99,9 +99,10 @@ class GeneratorWrapper(keras.utils.Sequence):
     Converts fit() into fit_generator() interface.
     """
 
-    def __init__(self, inputs, outputs, batch_size, shuffle):
+    def __init__(self, inputs, outputs, sample_weights, batch_size, shuffle):
         self._inputs = inputs
         self._outputs = outputs
+        self._sample_weights = sample_weights
         self._size = inputs[0].shape[0]
         self._batch_size = batch_size
         self._num_batches = int((self._size-1)/batch_size) + 1
@@ -115,14 +116,15 @@ class GeneratorWrapper(keras.utils.Sequence):
         return self._num_batches
 
     def __getitem__(self, index):
-        if index == 0 and self._shuffle:
+        if self._num_batches > 1 and index == 0 and self._shuffle:
             self._ids = np.random.choice(self._size, self._size, replace=False)
         start = index * self._batch_size
         end = min(start + self._batch_size, self._size)
         ids = self._ids[start: end]
         inputs = [v[ids, :] for v in self._inputs]
         outputs = [v[ids, :] for v in self._outputs]
-        return inputs, outputs
+        sample_weights = [v[ids] for v in self._sample_weights]
+        return inputs, outputs, sample_weights
 
 
 class ScipyOptimizer(object):
@@ -186,26 +188,26 @@ class ScipyOptimizer(object):
             state['in_epoch'] = True
 
         cost_sum = 0
-        if state['verbose'] and len(generator) > 1:
+        iterator = range(len(generator))
+        if state['verbose'] == 1 and len(generator) > 1:
             # iterator = trange(len(generator))
-            iterator = range(len(generator))
             progress_bar = Progbar(len(generator))
         else:
-            iterator = range(len(generator))
+            # iterator = range(len(generator))
             progress_bar = False
 
         state['epoch_logs'] = {}
         epoch_logs = state['epoch_logs']
 
         for batch_index in iterator:
-            inputs, outputs = generator[batch_index]
+            inputs, outputs, sample_weights = generator[batch_index]
             if isinstance(inputs, list):
                 isize = inputs[0].shape[0]
             else:
                 isize = inputs.shape[0]
             batch_logs = {'batch': batch_index, 'size': isize}
             callbacks.on_batch_begin(batch_index, batch_logs)
-            outs = self._model.train_on_batch(inputs, outputs)
+            outs = self._model.train_on_batch(inputs, outputs, sample_weights)
             if not isinstance(outs, list):
                 outs = [outs]
             for lbl, v in zip(self._model.metrics_names, outs):
@@ -221,10 +223,12 @@ class ScipyOptimizer(object):
 
         generator.on_epoch_end()
 
-        if state['verbose']:
-            epoch_logs = state['epoch_logs']
+        epoch_logs = state['epoch_logs']
+        if state['verbose'] > 0:
             print('itr:', state['epoch'],
                   ', '.join(['{0}: {1:.4e}'.format(k, v) for k, v in epoch_logs.items()]))
+        elif state['verbose'] < 0:
+            print('itr:', state['epoch'], ', loss: {0:.6e}'.format(epoch_logs['loss']))
 
         # average the metrics
         for lbl in self._model.metrics_names:
@@ -275,13 +279,14 @@ class ScipyOptimizer(object):
 
         # callbacks.on_test_end()
 
-    def fit(self, inputs, outputs, batch_size=32, shuffle=True, **kwargs):
-        return self.fit_generator(GeneratorWrapper(inputs, outputs, batch_size, shuffle), **kwargs)
+    def fit(self, inputs, outputs, sample_weights, batch_size=32, shuffle=True, **kwargs):
+        return self.fit_generator(GeneratorWrapper(inputs, outputs, sample_weights, batch_size, shuffle), **kwargs)
 
-    def fit_generator(self, generator, method='cg', epochs=1,
+    def fit_generator(self, generator, epochs=1,
                       validation_data=None,
                       callbacks=None,
                       verbose=True):
+        method = self._model.optimizer.method
         x0 = self._collect_weights()
         history = History()
         _callbacks = [BaseLogger(stateful_metrics=self._model.metrics_names)]
@@ -330,4 +335,4 @@ class ScipyOptimizer(object):
             callback=on_iteration_end, args=(generator, state))
         self._update_weights(result['x'])
         callback_list.on_train_end()
-        return result, history
+        return history

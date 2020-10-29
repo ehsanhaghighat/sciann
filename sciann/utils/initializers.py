@@ -20,7 +20,7 @@ class SciInitializer(k.initializers.VarianceScaling):
             distribution = 'uniform'
             mode = 'fan_avg'
         elif actf in ('sin', 'cos'):
-            self.w0 = 1.0 if lay==0 else 1.0
+            self.w0 = 6.0 if lay==0 else 1.0
             scale = 1.0
             distribution = 'truncated_normal'
             mode = 'fan_in'

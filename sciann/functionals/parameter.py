@@ -14,6 +14,11 @@ from tensorflow.python.keras.layers import Dense
 from tensorflow.python.keras.layers import Concatenate
 from tensorflow.python.keras.layers import InputSpec
 from tensorflow.python.keras.constraints import MinMaxNorm
+from tensorflow.python.util.tf_export import keras_export
+from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.keras import constraints
+from tensorflow.python.keras import initializers
+from tensorflow.python.keras import regularizers
 
 from ..utils import to_list
 from ..utils import default_constant_initializer
@@ -82,7 +87,8 @@ class Parameter(Functional):
         return Functional
 
 
-class ParameterBase(Dense):
+@keras_export('keras.layers.ParameterBase2')
+class ParameterBase(k.layers.Layer):
     """ Base Parameter class to be used for parameter inversion.
         Inherited from Dense layer.
 
@@ -93,52 +99,68 @@ class ParameterBase(Dense):
         non_neg (boolean): True (default) if only non-negative values are expected.
         **kwargs: keras.layer.Dense accepted arguments.
     """
+
     def __init__(self, val=None, min_max=None, non_neg=True, **kwargs):
+        super(ParameterBase, self).__init__(**kwargs)
+
         cst = None
         if min_max is not None:
-            cst = MinMax(min_value=min_max[0], max_value=min_max[1], penalty=1.0 if len(min_max)==2 else min_max[2])
-            val = (min_max[0] + min_max[1])/2.0 if val is None else val
+            cst = MinMax(min_value=min_max[0], max_value=min_max[1], penalty=1.0 if len(min_max) == 2 else min_max[2])
+            val = (min_max[0] + min_max[1]) / 2.0 if val is None else val
         elif non_neg:
             cst = k.constraints.non_neg()
-            
-        # Default value for initial values. 
-        val = 1.0 if val is None else val
-        
-        super(ParameterBase, self).__init__(
-            units=1,
-            use_bias=True,
-            kernel_initializer='zeros',
-            bias_initializer=default_constant_initializer(val),
-            kernel_regularizer=None,
-            bias_regularizer=None,
-            activity_regularizer=None,
-            kernel_constraint=None,
-            bias_constraint=cst,
-            **kwargs,
-        )
 
+        # Default value for initial values.
+        val = 1.0 if val is None else val
+
+        self.param_initializer = default_constant_initializer(val)
+        self.param_regularizer = None
+        self.param_constraint = None
+        self.shared_axes = None
+        self.param_constraint = cst
+
+    @tf_utils.shape_type_conversion
     def build(self, input_shape):
         assert len(input_shape) >= 2
-        input_dim = input_shape[-1]
+        input_dim = list(input_shape[1:])
 
-        self.kernel = self.add_weight(shape=(input_dim, self.units),
-                                      initializer=self.kernel_initializer,
-                                      name='kernel',
-                                      regularizer=self.kernel_regularizer,
-                                      constraint=self.kernel_constraint,
-                                      trainable=False)
-
-        self.bias = self.add_weight(shape=(self.units,),
-                                    initializer=self.bias_initializer,
-                                    name='bias',
-                                    regularizer=self.bias_regularizer,
-                                    constraint=self.bias_constraint)
-
-        self.input_spec = InputSpec(min_ndim=2, axes={-1: input_dim})
+        self.param = self.add_weight(
+            shape=[1,],
+            initializer=self.param_initializer,
+            name='param',
+            regularizer=self.param_regularizer,
+            constraint=self.param_constraint
+        )
+        # Set input spec
+        axes = {}
+        if self.shared_axes:
+            for i in range(1, len(input_shape)):
+                if i not in self.shared_axes:
+                    axes[i] = input_shape[i]
+        self.input_spec = InputSpec(ndim=len(input_shape), axes=axes)
         self.built = True
+
+    def call(self, inputs):
+        return self.param + inputs*0.0
+
+    def get_config(self):
+        config = {
+            'param_initializer': initializers.serialize(self.param_initializer),
+            'param_regularizer': regularizers.serialize(self.param_regularizer),
+            'param_constraint': constraints.serialize(self.param_constraint),
+            'shared_axes': self.shared_axes
+        }
+        base_config = super(ParameterBase, self).get_config()
+        return dict(list(base_config.items()) + list(config.items()))
+
+    @tf_utils.shape_type_conversion
+    def compute_output_shape(self, input_shape):
+        return self.param.shape
 
 
 from tensorflow.python.keras.constraints import Constraint
+
+@keras_export('keras.constraints.MinMax')
 class MinMax(Constraint):
     """MinMax weight constraint.
 

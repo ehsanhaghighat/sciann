@@ -157,11 +157,6 @@ class Functional(object):
                 "Provided - {}".format(variables)
             )
 
-        # Check and convert activation functions to proper format.
-        assert not isinstance(activation, list), \
-            'Expected an activation function name not a "list". '
-        afunc = get_activation(activation)
-
         # Input layers.
         if len(inputs) == 1:
             net_input = inputs[0]
@@ -186,7 +181,7 @@ class Functional(object):
             layers.append(layer)
             net[-1] = layer(net[-1])
             # Apply the activation.
-            if afunc.__name__ != 'linear': #nLay<len(hidden_layers)-1 and
+            if activations[nLay].activation.__name__ != 'linear': #nLay<len(hidden_layers)-1 and
                 layer = activations[nLay]
                 layers.append(layer)
                 net[-1] = layer(net[-1])
@@ -203,13 +198,11 @@ class Functional(object):
             layer = Concatenate(name=graph_unique_name('conct'))
             net_output = layer(net)
 
-        # check output activation functions.
-        output_func = get_activation(output_activation)
         # Define the final outputs of each network
         outputs = []
         for out in output_fields:
             # add the activation on the output.
-            if output_func.__name__ != 'linear':
+            if activations[-1].activation.__name__ != 'linear':
                 layer = activations[-1]
                 layers.append(layer)
                 outputs.append(layer(out(net_output)))
