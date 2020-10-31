@@ -158,10 +158,10 @@ class SciModel(object):
         self._loss_func = loss_func
         self._loss_grads = None
         if adaptive_loss_weights:
-            self._loss_grads = [
-                K.function(input_vars, tf_gradients(out, model.trainable_weights, unconnected_gradients='zero'))
-                for out in output_vars
-            ]
+            self._loss_grads = []
+            for out in output_vars:
+                gd = tf_gradients(out, model.trainable_weights, unconnected_gradients='zero')
+                self._loss_grads.append(K.function(input_vars, gd))
         # Plot to file if requested.
         if plot_to_file is not None:
             plot_model(self._model, to_file=plot_to_file)
@@ -425,6 +425,12 @@ class SciModel(object):
         for itr in range(freq_loss_update):
             # eval adaptive gradients 
             if self._loss_grads is not None:
+                # updated_grads = []
+                # for i, out in enumerate(self._model.outputs):
+                #     gd = tf_gradients(self._loss_func(out, y_star[i]),
+                #                       self.model.trainable_weights,
+                #                       unconnected_gradients='zero')
+                #     updated_grads.append(K.function(self._model.inputs, gd)(x_true))
                 # target_update weights
                 updated_grads = [f(x_true) for f in self._loss_grads]
                 ref_grad = max([np.abs(v).max() for v in updated_grads[0]])
@@ -437,11 +443,12 @@ class SciModel(object):
                 for i, (cw, cw_new) in enumerate(zip(target_weights, new_target_weights)):
                     sample_weights[i] *= cw_new/cw
                 target_weights = new_target_weights.copy()
+                # print(target_weights)
             
             # training the models.
             history_itr = opt_fit_func(
                 x_true, y_star,
-                sample_weights=sample_weights,  # sums to number of samples.
+                sample_weight=sample_weights,  # sums to number of samples.
                 epochs=itr_epoch,
                 batch_size=batch_size,
                 shuffle=shuffle,

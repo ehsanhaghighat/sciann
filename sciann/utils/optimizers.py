@@ -279,8 +279,8 @@ class ScipyOptimizer(object):
 
         # callbacks.on_test_end()
 
-    def fit(self, inputs, outputs, sample_weights, batch_size=32, shuffle=True, **kwargs):
-        return self.fit_generator(GeneratorWrapper(inputs, outputs, sample_weights, batch_size, shuffle), **kwargs)
+    def fit(self, inputs, outputs, sample_weight, batch_size=32, shuffle=True, **kwargs):
+        return self.fit_generator(GeneratorWrapper(inputs, outputs, sample_weight, batch_size, shuffle), **kwargs)
 
     def fit_generator(self, generator, epochs=1,
                       validation_data=None,
