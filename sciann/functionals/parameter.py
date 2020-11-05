@@ -141,7 +141,7 @@ class ParameterBase(k.layers.Layer):
         self.built = True
 
     def call(self, inputs):
-        return self.param + inputs*0.0
+        return self.param #+ inputs*0.0
 
     def get_config(self):
         config = {

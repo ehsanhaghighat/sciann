@@ -2,10 +2,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import division
 
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
-
 import tensorflow as tf
+tf.get_logger().setLevel('ERROR')
 tf.compat.v1.disable_eager_execution()
 
 from . import constraints
@@ -34,7 +32,7 @@ __copyright__ = "Copyright 2019, Physics-Informed Deep Learning"
 __credits__ = []
 __url__ = "http://github.com/sciann/sciann]"
 __license__ = "MIT"
-__version__ = "0.5.2.2"
+__version__ = "0.5.3"
 __cite__ = \
     '@misc{haghighat2019sciann, \n' +\
     '    title={SciANN: A Keras/Tensorflow wrapper for scientific computations and physics-informed deep learning using artificial neural networks}, \n' +\
