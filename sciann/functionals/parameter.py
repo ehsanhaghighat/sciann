@@ -87,7 +87,7 @@ class Parameter(Functional):
         return Functional
 
 
-@keras_export('keras.layers.ParameterBase2')
+@keras_export('keras.layers.ParameterBase')
 class ParameterBase(k.layers.Layer):
     """ Base Parameter class to be used for parameter inversion.
         Inherited from Dense layer.

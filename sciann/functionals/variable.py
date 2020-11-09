@@ -45,8 +45,7 @@ class Variable(Functional):
         super(Variable, self).__init__(
             layers=to_list(layer),
             inputs=to_list(layer.input),
-            outputs=to_list(layer.output),
-            operations='inputs'
+            outputs=to_list(layer.output)
         )
 
     @classmethod
