@@ -50,6 +50,7 @@ def pow(a, b):
         inputs = unique_tensors(f.inputs.copy()),
         outputs = _apply_operation(lmbd, f),
         layers = lmbd,
+        operations = f.operations + "-pow"
     )
 
     return res
@@ -79,7 +80,8 @@ def add(f, other):
     res = Functional(
         inputs = unique_tensors(inputs),
         outputs = _apply_operation(lmbd, f, other),
-        layers = lmbd
+        layers = lmbd,
+        operations = f.operations + "-add"
     )
     return res
 
@@ -121,7 +123,8 @@ def sub(f, other):
     res = Functional(
         inputs = unique_tensors(inputs),
         outputs = _apply_operation(lmbd, f, other),
-        layers = lmbd
+        layers = lmbd,
+        operations = f.operations + "-sub"
     )
     return res
 
@@ -150,7 +153,8 @@ def rsub(f, other):
     res = Functional(
         inputs = unique_tensors(inputs),
         outputs = _apply_operation(lmbd, f, other),
-        layers = lmbd
+        layers = lmbd,
+        operations = f.operations + "-rsub"
     )
     return res
 
@@ -179,7 +183,8 @@ def mul(f, other):
     res = Functional(
         inputs = unique_tensors(inputs),
         outputs = _apply_operation(lmbd, f, other),
-        layers = lmbd
+        layers = lmbd,
+        operations = f.operations + "-mul"
     )
     return res
 
@@ -221,7 +226,8 @@ def div(f, other):
     res = Functional(
         inputs = unique_tensors(inputs),
         outputs = _apply_operation(lmbd, f, other),
-        layers = lmbd
+        layers = lmbd,
+        operations = f.operations + "-div"
     )
     return res
 
@@ -250,7 +256,8 @@ def rdiv(f, other):
     res = Functional(
         inputs = unique_tensors(inputs),
         outputs = _apply_operation(lmbd, f, other),
-        layers = lmbd
+        layers = lmbd,
+        operations = f.operations + "-rdiv"
     )
     return res
 
@@ -286,7 +293,8 @@ def dot(f, other):
     res = Functional(
         inputs = unique_tensors(inputs),
         outputs = outputs,
-        layers = layers
+        layers = layers,
+        operations = f.operations + "-dot"
     )
     return res
 
@@ -319,7 +327,8 @@ def diag_part(f):
     res = Functional(
         inputs = f.inputs.copy(),
         outputs = outputs,
-        layers = lmbd
+        layers = lmbd,
+        operations = f.operations + "-diag"
     )
     return res
 
@@ -352,7 +361,8 @@ def diag(f):
     res = Functional(
         inputs = f.inputs.copy(),
         outputs = outputs,
-        layers = lmbd
+        layers = lmbd,
+        operations = f.operations + "-diag"
     )
     return res
 
@@ -590,7 +600,8 @@ def step(x):
     res = Functional(
         inputs = x.inputs.copy(),
         outputs = _apply_operation(lmbd, x),
-        layers = lmbd
+        layers = lmbd,
+        operations = x.operations + "-step"
     )
     return res
 
@@ -707,7 +718,8 @@ def _apply_function(x, fname, **kwargs):
     res = Functional(
         inputs = x.inputs.copy(),
         outputs = _apply_operation(lmbd, x),
-        layers = lmbd
+        layers = lmbd,
+        operations = x.operations + "-" + fname
     )
     return res
 
@@ -747,7 +759,8 @@ def getitem(x, item):
     res = Functional(
         inputs = x.inputs.copy(),
         outputs = ys,
-        layers = lmbd
+        layers = lmbd,
+        operations = x.operations
     )
     return res
 
@@ -993,7 +1006,8 @@ def _gdiff(gtype, f, *args, **kwargs):
     res = Functional(
         inputs = unique_tensors(inputs),
         outputs = to_list(tens),
-        layers = to_list(lay)
+        layers = to_list(lay),
+        operations = f.operations + "-grad"
     )
     
     return res
@@ -1070,6 +1084,7 @@ def stop_gradient(f):
         inputs = unique_tensors(f.inputs.copy()),
         outputs = _apply_operation(lmbd, f),
         layers = lmbd,
+        operations = f.operations + "-stopgrad"
     )
 
     return res

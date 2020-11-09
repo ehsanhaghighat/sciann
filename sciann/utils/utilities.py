@@ -24,7 +24,8 @@ from tensorflow.python.keras.initializers import Constant as default_constant_in
 from tensorflow.python.keras.initializers import VarianceScaling
 from tensorflow.python.keras.regularizers import l1_l2
 
-from .initializers import SciInitializer as Initializer
+from .initializers import SciKernelInitializer as KInitializer
+from .initializers import SciBiasInitializer as BInitializer
 from .activations import get_activation, SciActivation, SciActivationLayer
 
 
@@ -139,8 +140,8 @@ def prepare_default_activations_and_initializers(actfs, seed=None):
             lay_actf = actf.lower().split('l-')
         else:
             raise ValueError('expected a string for actf.')
-        bias_initializer.append(Initializer(lay_actf[-1], lay, True, seed))
-        kernel_initializer.append(Initializer(lay_actf[-1], lay, False, seed))
+        bias_initializer.append(BInitializer(lay_actf[-1], lay, seed))
+        kernel_initializer.append(KInitializer(lay_actf[-1], lay, seed))
         f = get_activation(lay_actf[-1])
         w = kernel_initializer[-1].w0
         if len(lay_actf) == 1:

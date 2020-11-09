@@ -2,22 +2,22 @@
 import tensorflow.python.keras as k
 
 
-class SciInitializer(k.initializers.VarianceScaling):
+class SciKernelInitializer(k.initializers.VarianceScaling):
 
-    def __init__(self, actf='linear', lay=0, bias=False, seed=None):
+    def __init__(self, actf='linear', lay=0, seed=None):
         self.actf = actf
         self.lay = lay
-        self.bias = bias
 
+        # Kernel initializer
         if actf in ('linear', 'relu'):
             self.w0 = 1.0
-            scale = 2.0
-            distribution = 'uniform'
+            scale = 1.0
+            distribution = 'truncated_normal'
             mode = 'fan_avg'
         elif actf in ('tanh', 'atan'):
             self.w0 = 1.0
             scale = 1.0
-            distribution = 'uniform'
+            distribution = 'truncated_normal'
             mode = 'fan_avg'
         elif actf in ('sin', 'cos'):
             self.w0 = 6.0 if lay==0 else 1.0
@@ -30,10 +30,7 @@ class SciInitializer(k.initializers.VarianceScaling):
             distribution = 'truncated_normal'
             mode = 'fan_avg'
 
-        if bias is True:
-            self.w0 = 1./self.w0
-
-        super(SciInitializer, self).__init__(
+        super(SciKernelInitializer, self).__init__(
             scale=scale,
             mode=mode,
             distribution=distribution,
@@ -47,6 +44,25 @@ class SciInitializer(k.initializers.VarianceScaling):
             'lay': self.lay,
             'actf': self.actf,
             'bias': self.bias
+        }
+        return dict(list(base_config.items()) + list(config.items()))
+
+
+class SciBiasInitializer(k.initializers.RandomUniform):
+
+    def __init__(self, actf='linear', lay=0, seed=None):
+        self.w0 = 1.0
+        self.actf = actf
+        self.lay = lay
+
+        super(SciBiasInitializer, self).__init__(seed=seed)
+
+    def get_config(self):
+        base_config = super().get_config()
+        config = {
+            'w0': self.w0,
+            'lay': self.lay,
+            'actf': self.actf
         }
         return dict(list(base_config.items()) + list(config.items()))
 
@@ -89,6 +105,6 @@ class SciOrthogonalInitializer(k.initializers.Orthogonal):
 
 
 k.utils.generic_utils.get_custom_objects().update({
-    'SciInitializer': SciInitializer,
+    'SciKernelInitializer': SciKernelInitializer,
     'SciOrthogonalInitializer': SciOrthogonalInitializer
 })

@@ -46,6 +46,7 @@ class Variable(Functional):
             layers=to_list(layer),
             inputs=to_list(layer.input),
             outputs=to_list(layer.output),
+            operations='inputs'
         )
 
     @classmethod

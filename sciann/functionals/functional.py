@@ -88,6 +88,9 @@ class Functional(object):
             self._inputs = kwargs['inputs'].copy()
             self._outputs = kwargs['outputs'].copy()
             self._layers = kwargs['layers'].copy()
+            if 'operations' not in kwargs:
+                assert 'error'
+            self._operations = kwargs['operations']
             self._set_model()
             return
         # prepare kernel initializers.
@@ -212,6 +215,7 @@ class Functional(object):
         self._inputs = inputs
         self._outputs = outputs
         self._layers = layers
+        self._operations = 'network'
         self._set_model()
 
     def eval(self, *kwargs):
@@ -298,6 +302,14 @@ class Functional(object):
     @outputs.setter
     def outputs(self, value):
         self._outputs = value
+
+    @property
+    def operations(self):
+        return self._operations
+
+    @operations.setter
+    def operations(self, value):
+        self._operations = value
 
     @property
     def model(self):

@@ -22,7 +22,7 @@ from ..utils.optimizers import GradientObserver, ScipyOptimizer
 
 from ..functionals import Variable
 from ..functionals import RadialBasis
-from ..constraints import Data, Tie
+from ..constraints import Data, PDE, Tie
 
 
 class SciModel(object):
@@ -96,6 +96,7 @@ class SciModel(object):
             if not is_constraint(y):
                 if is_functional(y):
                     # Case of Data-type constraint.
+                    # By default, targets are initialized with Data.
                     targets[i] = Data(y)
                 elif isinstance(y, tuple) and \
                         len(y) == 2 and \
@@ -408,8 +409,9 @@ class SciModel(object):
         if adaptive_weights:
             callbacks.append(
                 GradientPathologyLossWeight(
-                    self._model, x_true, y_star, sample_weights,
-                    beta=0.8, freq=adaptive_weights
+                    self.model, x_true, y_star, sample_weights,
+                    beta=0.8, freq=adaptive_weights,
+                    types=[type(v).__name__ for v in self.constraints]
                 ),
                 # k.callbacks.CSVLogger('GP.log')
             )
@@ -655,7 +657,7 @@ class EarlyStoppingByLearningRate(k.callbacks.Callback):
 
 
 class GradientPathologyLossWeight(k.callbacks.Callback):
-    def __init__(self, model, inputs, targets, weights, beta=0.8, freq=100):
+    def __init__(self, model, inputs, targets, weights, beta=0.8, freq=100, types=None):
         super(k.callbacks.Callback, self).__init__()
         self.inputs = inputs
         self.targets = targets
@@ -674,21 +676,33 @@ class GradientPathologyLossWeight(k.callbacks.Callback):
             )
         self.freq = 0 if isinstance(freq, bool) else freq
         self.beta = beta
+        if types is None:
+            self.types = ['PDE'] + (len(self.targets)-1)*['Data']
+        else:
+            assert len(targets) == len(types)
+            assert 'PDE' in types, \
+                "Adaptive weights can only be used when PDE constraint is defined."
+            self.types = types
 
     def on_train_begin(self, logs={}):
         # update loss-weights
         self.update_loss_weights(0)
 
     def on_epoch_end(self, epoch, logs={}):
+        loss_gradients = self.eval_loss_gradients()
         if epoch > 1 and self.freq > 1 \
                 and epoch % self.freq == 0:
-            self.update_loss_weights(epoch)
+            self.update_loss_weights(epoch, loss_gradients)
         # log the weights in the history output.
         logs['adaptive_weights'] = [
             K.get_value(wi) for wi in self.model.loss_weights
         ]
+        # log norm2 of gradients
+        logs['loss_gradients'] = [
+            np.linalg.norm(lgi) for lgi in loss_gradients
+        ]
 
-    def eval_loss_weights(self):
+    def eval_loss_gradients(self):
         # eval new gradients
         updated_grads = []
         for lgi, trg in zip(self.loss_grads, self.targets):
@@ -697,26 +711,45 @@ class GradientPathologyLossWeight(k.callbacks.Callback):
                     [np.abs(wg).flatten() for wg in lgi(self.inputs)]
                 )
             )
+        return updated_grads
+
+    def eval_loss_weights(self, updated_grads=None):
+        # Method 1: normalization by PDE.
+        # eval new gradients
+        if updated_grads is None:
+            updated_grads = self.eval_loss_gradients()
         # eval max normalization on PDE.
-        ref_grad = updated_grads[0].max()
+        ref_grad = []
+        for type, ws in zip(self.types, updated_grads):
+            if type is 'PDE':
+                ref_grad.append(ws.max())
+        ref_grad = max(ref_grad)
         # mean loss terms
         mean_grad = []
-        for ws in updated_grads:
+        for type, ws in zip(self.types, updated_grads):
+            # if type is not 'PDE':
             ws_mean = ws.mean()
             mean_grad += [1.0 if ws_mean == 0. else ws_mean]
-        return (ref_grad, mean_grad)
-
-    def update_loss_weights(self, epoch):
-        ref_grad, mean_grad = self.eval_loss_weights()
+        # mean_grad = np.mean(mean_grad)
         # evaluate new weights
-        # new weights
+        new_weights = []
+        for i, type in enumerate(self.types):
+            if type == 'PDE':
+                new_weights.append(1.0)
+            elif type in ('Data', 'Tie'):
+                new_weights.append(ref_grad / mean_grad[i])
+            else:
+                assert 'Incorrect target. '
+        return new_weights
+
+    def update_loss_weights(self, epoch, updated_grads=None):
+        new_weights = self.eval_loss_weights(updated_grads)
+        # evaluate new weights
         for i, wi in enumerate(self.model.loss_weights):
-            if i > 0:
-                # gp_weights[i]
-                gp_weight = ref_grad / (mean_grad[i] * K.get_value(wi))
-                new_val = (1.0-self.beta)*K.get_value(wi) + self.beta*gp_weight
-                K.set_value(self.model.loss_weights[i], new_val)
+            gp_weight = new_weights[i] / K.get_value(wi)
+            new_val = (1.0-self.beta)*K.get_value(wi) + self.beta*gp_weight
+            K.set_value(self.model.loss_weights[i], new_val)
         # print updates
-        print('adaptive_weights at epoch {}:'.format(epoch),
+        print('\n+ adaptive_weights at epoch {}:'.format(epoch),
               [K.get_value(wi) for wi in self.model.loss_weights])
 

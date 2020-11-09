@@ -16,7 +16,7 @@ from .functionals.variable import Variable
 from .functionals.field import Field
 from .functionals.parameter import Parameter
 from .models.model import SciModel
-from .constraints import Constraint, Data, Tie
+from .constraints import Constraint, PDE, Data, Tie
 
 # Also importable from root
 from .utils.math import *
@@ -32,7 +32,7 @@ __copyright__ = "Copyright 2019, Physics-Informed Deep Learning"
 __credits__ = []
 __url__ = "http://github.com/sciann/sciann]"
 __license__ = "MIT"
-__version__ = "0.5.3"
+__version__ = "0.5.3.1"
 __cite__ = \
     '@misc{haghighat2019sciann, \n' +\
     '    title={SciANN: A Keras/Tensorflow wrapper for scientific computations and physics-informed deep learning using artificial neural networks}, \n' +\
